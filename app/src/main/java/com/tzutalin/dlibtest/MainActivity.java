@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE_PERMISSION = 2;
 
     private static final String TAG = "MainActivity";
-
+    private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -110,9 +110,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Click({R.id.fab_process}) //process button
-    protected void launchCameraPreview() {
-        //startActivity(new Intent(this, CameraActivity.class));
+    protected void searchPeople() {
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
+        sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
         startActivity(sendIntent);
     }
 
@@ -297,14 +297,13 @@ public class MainActivity extends AppCompatActivity {
         int width = bm.getWidth();
         int height = bm.getHeight();
         // By ratio scale
-        float aspectRatio = bm.getWidth() / (float) bm.getHeight();
+        float aspectRatio = width / (float) height;
 
         final int MAX_SIZE = 512;
         int newWidth = MAX_SIZE;
-        int newHeight = MAX_SIZE;
         float resizeRatio = 1;
-        newHeight = Math.round(newWidth / aspectRatio);
-        if (bm.getWidth() > MAX_SIZE && bm.getHeight() > MAX_SIZE) {
+        int newHeight = Math.round(newWidth / aspectRatio);
+        if (width > MAX_SIZE && height > MAX_SIZE) {
             Timber.tag(TAG).d("Resize Bitmap");
             bm = getResizedBitmap(bm, newWidth, newHeight);
             resizeRatio = (float) bm.getWidth() / (float) width;
@@ -324,14 +323,22 @@ public class MainActivity extends AppCompatActivity {
             bounds.top = (int) (ret.getTop() * resizeRatio);
             bounds.right = (int) (ret.getRight() * resizeRatio);
             bounds.bottom = (int) (ret.getBottom() * resizeRatio);
-            canvas.drawRect(bounds, paint);
+            //canvas.drawRect(bounds, paint); //얼굴 사각형 그리기
             // Get landmark
             ArrayList<Point> landmarks = ret.getFaceLandmarks();
+            String tempLandmark = new String();
+            tempLandmark = "";
+            int index = 0;
             for (Point point : landmarks) {
                 int pointX = (int) (point.x * resizeRatio);
                 int pointY = (int) (point.y * resizeRatio);
-                canvas.drawCircle(pointX, pointY, 2, paint);
+                tempLandmark += Integer.toString(pointX);
+                tempLandmark += ",";
+                tempLandmark += Integer.toString(pointY);
+                tempLandmark += ",";
+                //canvas.drawCircle(pointX, pointY, 2, paint); 랜드마크 그리기
             }
+            totalLandmarks.add(tempLandmark);
         }
         return new BitmapDrawable(getResources(), bm);
     }
