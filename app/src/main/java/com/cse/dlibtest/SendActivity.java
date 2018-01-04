@@ -18,24 +18,28 @@ import java.util.ArrayList;
 public class SendActivity extends AppCompatActivity {
     Face[] face;
     final private int LANDMARK_SIZE = 68;
-
+    LandmarkComparator comparator = new LandmarkComparator();
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
-        Point[] point = new Point[68];
-        ArrayList<String> totalLanmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        Log.d("landmark", totalLanmarks.get(0));
-        face = new Face[totalLanmarks.size()];
-        for(int i = 0; i < totalLanmarks.size(); i++){
+        ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
+        ArrayList<String> testLandmarks = getIntent().getExtras().getStringArrayList("TestLandmarks");
+
+        int size = totalLandmarks.size();
+        face = new Face[size];
+        for(int i = 0; i < size; i++){
             face[i] = new Face();
         }
-        for(int i = 0; i < totalLanmarks.size(); i++) {
-            point = convertStringToPoint(totalLanmarks.get(i));
-            for(int j = 0; j < LANDMARK_SIZE; j++){
-                face[i].setFaceLandmarks(j, point[j]);
-            }
-        }
+        saveUserLandmark(face, totalLandmarks, size);
+
+        //테스트 이미지
+        Face[] test = new Face[1];
+        test[0] = new Face();
+        saveUserLandmark(test, testLandmarks, testLandmarks.size());
+
+        //비교 진행
+        comparator.compare(face[0], test[0]);
 
         Button mBackButton = (Button)findViewById(R.id.btn_back);
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -49,6 +53,15 @@ public class SendActivity extends AppCompatActivity {
         });
     }
 
+    protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){
+        Point[] point = new Point[68];
+        for(int i = 0; i < size; i++) {
+            point = convertStringToPoint(totalLandmarks.get(i));
+            for(int j = 0; j < LANDMARK_SIZE; j++){
+                face[i].setFaceLandmarks(j, point[j]);
+            }
+        }
+    }
     protected Point[] convertStringToPoint(String str){
         Point[] point = new Point[LANDMARK_SIZE];
         for(int i = 0; i < point.length; i++){

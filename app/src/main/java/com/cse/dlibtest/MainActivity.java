@@ -28,6 +28,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.dexafree.materialList.card.Card;
@@ -58,6 +59,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
+    private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -93,6 +95,30 @@ public class MainActivity extends AppCompatActivity {
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             verifyPermissions(this);
         }
+
+        //테스트 이미지 랜드마크 추출
+        String testLandmark = detectTestLandmarks();
+        testLandmarks.add(testLandmark);
+        Log.d("Landmark", testLandmark);
+    }
+    protected String detectTestLandmarks(){
+        FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.messi);
+        List<VisionDetRet> results = fDet.detect(bitmap);
+        String tempTestLandmarks = "";
+        for (final VisionDetRet ret : results) {
+            // Get 68 landmark points
+            ArrayList<Point> landmarks = ret.getFaceLandmarks();
+            for (Point point : landmarks) {
+                int pointX = point.x;
+                int pointY = point.y;
+                tempTestLandmarks += Integer.toString(pointX);
+                tempTestLandmarks += ",";
+                tempTestLandmarks += Integer.toString(pointY);
+                tempTestLandmarks += ",";
+            }
+        }
+        return tempTestLandmarks;
     }
 
     @AfterViews
@@ -112,6 +138,7 @@ public class MainActivity extends AppCompatActivity {
     protected void searchPeople() {
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
+        sendIntent.putStringArrayListExtra("TestLandmarks", testLandmarks);
         startActivity(sendIntent);
     }
 
