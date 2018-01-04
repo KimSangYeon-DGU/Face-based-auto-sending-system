@@ -1,6 +1,7 @@
 package com.tzutalin.dlibtest;
 
 import android.content.Intent;
+import android.graphics.Point;
 import android.nfc.Tag;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -16,13 +17,26 @@ import java.util.ArrayList;
  */
 
 public class SendActivity extends AppCompatActivity {
+    Face[] face;
+    final private int LANDMARK_SIZE = 68;
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
-
+        Point[] point = new Point[68];
         ArrayList<String> totalLanmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
         Log.d("landmark", totalLanmarks.get(0));
+        face = new Face[totalLanmarks.size()];
+        for(int i = 0; i < totalLanmarks.size(); i++){
+            face[i] = new Face();
+        }
+        for(int i = 0; i < totalLanmarks.size(); i++) {
+            point = convertStringToPoint(totalLanmarks.get(i));
+            for(int j = 0; j < LANDMARK_SIZE; j++){
+                face[i].setFaceLandmarks(j, point[j]);
+            }
+        }
 
         Button mBackButton = (Button)findViewById(R.id.btn_back);
         mBackButton.setOnClickListener(new View.OnClickListener() {
@@ -34,7 +48,41 @@ public class SendActivity extends AppCompatActivity {
                 startActivity(moveToMainIntent); //Activity 시작
             }
         });
+    }
 
-
+    protected Point[] convertStringToPoint(String str){
+        Point[] point = new Point[LANDMARK_SIZE];
+        for(int i = 0; i < point.length; i++){
+            point[i] = new Point();
+        }
+        int index = 0;
+        int pointX, pointY;
+        for(int i = 0; i < LANDMARK_SIZE; i++) {
+            String temp = "";
+            pointX = 0;
+            pointY = 0;
+            while(str.charAt(index) != ','){
+                temp += str.charAt(index);
+                index++;
+            }
+            if(temp != "") {
+                pointX = Integer.parseInt(temp);
+                temp = "";
+            }
+            index++;
+            while(str.charAt(index) != ','){
+                temp += str.charAt(index);
+                index++;
+            }
+            if(temp != "") {
+                pointY = Integer.parseInt(temp);
+            }
+            index++;
+            if(pointX != 0 && pointY != 0) {
+                point[i].x = pointX;
+                point[i].y = pointY;
+            }
+        }
+        return point;
     }
 }

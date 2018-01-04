@@ -2,9 +2,12 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/Face-based-auto-sending-system.iml" filepath="$PROJECT_DIR$/Face-based-auto-sending-system.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\app\app.iml" filepath="C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\app\app.iml" />
       <module fileurl="file://$PROJECT_DIR$/dlib/dlib.iml" filepath="$PROJECT_DIR$/dlib/dlib.iml" />
-      <module fileurl="file://$PROJECT_DIR$/dlib-android-app.iml" filepath="$PROJECT_DIR$/dlib-android-app.iml" />
+      <module fileurl="file://C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\dlib\dlib.iml" filepath="C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\dlib\dlib.iml" />
+      <module fileurl="file://C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\dlib-android-app.iml" filepath="C:\Users\sy081\Desktop\workspace\cse-2018\Face-based-auto-sending-system\dlib-android-app.iml" />
     </modules>
   </component>
 </project>
