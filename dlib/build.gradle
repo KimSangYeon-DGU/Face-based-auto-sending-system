@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 
 // required by POM
 version = "${rootProject.ext.releaseVersionName}"
-group = "com.tzutalin.dlib-android-app"
+group = "com.cse.dlib-android-app"
 
 android {
     compileSdkVersion rootProject.ext.androidCompileSdkVersion

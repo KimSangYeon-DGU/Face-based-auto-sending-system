@@ -1,4 +1,4 @@
-package com.tzutalin.dlibtest;
+package com.cse.dlibtest;
 
 import android.graphics.Point;
 

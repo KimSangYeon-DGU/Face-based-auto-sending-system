@@ -1,4 +1,4 @@
-package com.tzutalin.dlib;
+package com.cse.dlib;
 
 import android.os.Environment;
 

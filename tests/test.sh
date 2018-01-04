@@ -9,4 +9,4 @@ else
 fi
 
 adb push test.bmp /sdcard/
-adb shell am instrument -w -r -e debug false -e class DLibFunctionsTest com.tzutalin.dlibtest.test/android.support.test.runner.AndroidJUnitRunner
+adb shell am instrument -w -r -e debug false -e class DLibFunctionsTest com.cse.dlibtest.test/android.support.test.runner.AndroidJUnitRunner

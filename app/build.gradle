@@ -5,7 +5,7 @@ android {
     buildToolsVersion "${rootProject.ext.androidBuildToolsVersion}"
 
     defaultConfig {
-        applicationId "com.tzutalin.dlibtest"
+        applicationId "com.cse.dlibtest"
         minSdkVersion 19
         targetSdkVersion  rootProject.ext.androidCompileSdkVersion
         versionCode 1

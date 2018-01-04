@@ -23,7 +23,7 @@ task clean(type: Delete) {
 }
 
 ext {
-    groupName = 'com.github.tzutalin'
+    groupName = 'com.github.cse'
     artifactName = 'dlib-android-app'
     artifactDescription = 'An Android library to wrap dlib library to use face and landmark detection'
     artifactLabels = ['dlib', 'android']
