@@ -128,13 +128,23 @@ public class MainActivity extends AppCompatActivity {
         for (final VisionDetRet ret : results) {
             // Get 68 landmark points
             ArrayList<Point> landmarks = ret.getFaceLandmarks();
+            Point start = landmarks.get(0);
+            Point end = landmarks.get(16);
+            int midX, midY;
+            midX = (end.x + start.x)/2;
+            midY = (end.y + start.y)/2;
+            int i = 0;
             for (Point point : landmarks) {
                 int pointX = point.x;
                 int pointY = point.y;
-                tempTestLandmarks += Integer.toString(pointX);
-                tempTestLandmarks += ",";
-                tempTestLandmarks += Integer.toString(pointY);
-                tempTestLandmarks += ",";
+                tempTestLandmarks += Integer.toString(i++);
+                tempTestLandmarks += ": ";
+                tempTestLandmarks += "(";
+                tempTestLandmarks += Integer.toString(pointX-midX);
+                tempTestLandmarks += ", ";
+                tempTestLandmarks += Integer.toString(pointY-midY);
+                tempTestLandmarks += ")";
+                tempTestLandmarks += ", ";
             }
         }
         return tempTestLandmarks;
