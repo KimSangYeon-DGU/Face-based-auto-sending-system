@@ -97,13 +97,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //테스트 이미지 랜드마크 추출
-        String testLandmark = detectTestLandmarks();
-        testLandmarks.add(testLandmark);
+        int[] path = new int[14];
+        path[0] = R.drawable.na1;
+        path[1] = R.drawable.na2;
+        path[2] = R.drawable.na3;
+        path[3] = R.drawable.na4;
+        path[4] = R.drawable.na5;
+        path[5] = R.drawable.na6;
+        path[6] = R.drawable.na7;
+        path[7] = R.drawable.na8;
+        path[8] = R.drawable.na9;
+        path[9] = R.drawable.na10;
+        path[10] = R.drawable.na11;
+        path[11] = R.drawable.na12;
+        path[12] = R.drawable.na13;
+        path[13] = R.drawable.na14;
+
+        String testLandmark = "";
+        for(int i = 0 ; i < 14; i++) {
+            testLandmark = detectTestLandmarks(path[i]);
+            testLandmarks.add(testLandmark);
+        }
         Log.d("Landmark", testLandmark);
     }
-    protected String detectTestLandmarks(){
+    protected String detectTestLandmarks(int id){
         FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.messi);
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), id);
         List<VisionDetRet> results = fDet.detect(bitmap);
         String tempTestLandmarks = "";
         for (final VisionDetRet ret : results) {
@@ -362,7 +381,7 @@ public class MainActivity extends AppCompatActivity {
                 tempLandmark += ",";
                 tempLandmark += Integer.toString(pointY);
                 tempLandmark += ",";
-                //canvas.drawCircle(pointX, pointY, 2, paint); 랜드마크 그리기
+                //canvas.drawCircle(pointX, pointY, 2, paint); //랜드마크 그리기
             }
             totalLandmarks.add(tempLandmark);
         }

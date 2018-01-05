@@ -7,9 +7,9 @@ import android.graphics.Point;
  */
 
 public class LandmarkComparator {
-    final private int LANDMARK_SIZE = 68;
-    final private int OUTLINE_LANDMARK_SIZE = 17;
-    private double[] outlines = new double[OUTLINE_LANDMARK_SIZE];
+        final private int LANDMARK_SIZE = 68;
+        final private int OUTLINE_LANDMARK_SIZE = 17;
+        private double[] outlines = new double[OUTLINE_LANDMARK_SIZE];
     public double compare(Face face1, Face face2){
         double prob = 0.0;
         double[] temp1 = new double[OUTLINE_LANDMARK_SIZE];
@@ -32,6 +32,8 @@ public class LandmarkComparator {
         prob = getMeanSquaredError(temp1, temp2, OUTLINE_LANDMARK_SIZE);
         return prob;
     }
+
+    //평균제곱오차
     public double getMeanSquaredError(double[] ans, double[] comp, int size){
         double sum = 0.0;
         for(int i = 0; i < OUTLINE_LANDMARK_SIZE; i++){
@@ -40,6 +42,7 @@ public class LandmarkComparator {
         return sum / OUTLINE_LANDMARK_SIZE;
     }
 
+    //비율 구하기
     public double[] calculateRatio(double[] value, double sum, int size){
         double[] result = new double[size];
         for(int i = 0; i < size; i++){
@@ -48,6 +51,7 @@ public class LandmarkComparator {
         return result;
     }
 
+    //거리 구하기
     public double getDistance(Point point1, Point point2){
         return Math.sqrt(Math.pow((point2.x - point1.x),2) + Math.pow((point2.y - point1.y),2));
     }
