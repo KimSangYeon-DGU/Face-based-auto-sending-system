@@ -97,6 +97,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
         //테스트 이미지 랜드마크 추출
+        /*
         int[] path = new int[14];
         path[0] = R.drawable.na1;
         path[1] = R.drawable.na2;
@@ -119,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
             testLandmarks.add(testLandmark);
         }
         Log.d("Landmark", testLandmark);
+        */
     }
     protected String detectTestLandmarks(int id){
         FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
