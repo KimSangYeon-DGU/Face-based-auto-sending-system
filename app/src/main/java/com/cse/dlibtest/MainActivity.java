@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
         int[] path = new int[3];
         path[0] = R.drawable.s2;
         path[1] = R.drawable.n2;
-        path[2] = R.drawable.b3;
+        path[2] = R.drawable.b2;
 
         String testLandmark = "";
         for(int i = 0 ; i < path.length; i++) {
