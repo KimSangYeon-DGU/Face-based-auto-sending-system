@@ -7,6 +7,8 @@ package com.cse.dlibtest;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -22,20 +24,25 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.ContactsContract;
+import android.provider.ContactsContract.Contacts;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.widget.Toast;
 
-import com.dexafree.materialList.card.Card;
-import com.dexafree.materialList.card.provider.BigImageCardProvider;
-import com.dexafree.materialList.view.MaterialListView;
 import com.cse.dlib.Constants;
 import com.cse.dlib.FaceDet;
 import com.cse.dlib.VisionDetRet;
+import com.dexafree.materialList.card.Card;
+import com.dexafree.materialList.card.provider.BigImageCardProvider;
+import com.dexafree.materialList.view.MaterialListView;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -45,19 +52,16 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import hugo.weaving.DebugLog;
 import timber.log.Timber;
-
-import android.provider.ContactsContract;
-import android.provider.ContactsContract.Contacts;
-
-import java.io.FileOutputStream;
-import java.io.BufferedWriter;
-import java.io.OutputStreamWriter;
-
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity {
@@ -66,12 +70,12 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
+    private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            Manifest.permission.CAMERA,
-            Manifest.permission.READ_CONTACTS
+            Manifest.permission.CAMERA
     };
 
     protected String mTestImgPath;
@@ -86,14 +90,76 @@ public class MainActivity extends AppCompatActivity {
     protected Toolbar mToolbar;
 
     FaceDet mFaceDet;
-    /*
-    TextView textView;
-*/
+
+
+    //CONTACTS DATA SET
+    static final String[] field = new String[] {
+            ContactsContract.CommonDataKinds.Phone._ID,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.PHOTO_ID,
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+    };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mListView = (MaterialListView) findViewById(R.id.material_listview);
+
+        //tedpermission
+        PermissionListener permissionlistener = new PermissionListener()
+        {
+            @Override
+            public void onPermissionGranted()
+            {
+                Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+
+                Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, field, null,
+                        null, Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
+
+                ContentResolver cr = getContentResolver();
+
+                //한 행씩 이동
+                while(c.moveToNext()) {
+                    int a=0;
+                    HashMap<String,String> map = new HashMap<String,String>();
+                    //연락처 ID이 여기 위치
+                    String id = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID));
+                    //연락처 대표 이름이 여기 위치
+                    String name = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    map.put("name", name);
+
+                    int contactId_idx = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
+                    Long contactId = c.getLong(contactId_idx);
+
+                    Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
+                    InputStream input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
+
+                    Bitmap contactPhoto = BitmapFactory.decodeStream(input);
+
+                    //cotactPhoto is NULL...... should fix
+                    if(contactPhoto != null)
+                    saveBitmaptoJpeg(contactPhoto,"dir","testpic.png" + a);
+
+                }
+            }
+
+            @Override
+            public void onPermissionDenied(ArrayList<String> deniedPermissions)
+            {
+                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+
+            }
+        };
+
+        new TedPermission(this)
+                .setPermissionListener(permissionlistener)
+                .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
+                .setPermissions(Manifest.permission.READ_CONTACTS, Manifest.permission.ACCESS_FINE_LOCATION)
+                .check();
+
+
         setSupportActionBar(mToolbar);
         // Just use hugo to print log
         isExternalStorageWritable();
@@ -104,91 +170,86 @@ public class MainActivity extends AppCompatActivity {
 
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             verifyPermissions(this);
-
-
         }
 
+        //테스트 이미지 랜드마크 추출
         /*
-        textView = (TextView) findViewById(R.id.textView);
-        ArrayList<String> phoneLists = phoneBook();
-        Collections.sort(phoneLists);
-        for (String item:phoneLists) textView.append("\n"+item);
+        int[] path = new int[14];
+        path[0] = R.drawable.na1;
+        path[1] = R.drawable.na2;
+        path[2] = R.drawable.na3;
+        path[3] = R.drawable.na4;
+        path[4] = R.drawable.na5;
+        path[5] = R.drawable.na6;
+        path[6] = R.drawable.na7;
+        path[7] = R.drawable.na8;
+        path[8] = R.drawable.na9;
+        path[9] = R.drawable.na10;
+        path[10] = R.drawable.na11;
+        path[11] = R.drawable.na12;
+        path[12] = R.drawable.na13;
+        path[13] = R.drawable.na14;
+        String testLandmark = "";
+        for(int i = 0 ; i < 14; i++) {
+            testLandmark = detectTestLandmarks(path[i]);
+            testLandmarks.add(testLandmark);
+        }
+        Log.d("Landmark", testLandmark);
         */
     }
-
-    private Cursor getURI() {
-        // 주소록 URI
-        Uri people = Contacts.CONTENT_URI;
-
-        // 검색할 컬럼 정하기
-        String[] projection = new String[] { Contacts._ID, Contacts.DISPLAY_NAME, Contacts.HAS_PHONE_NUMBER };
-
-        // 쿼리 날려서 커서 얻기
-        String[] selectionArgs = null;
-        String sortOrder = ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC";
-        return getContentResolver().query(people, projection, null, selectionArgs, sortOrder);
-    }
-
-
-    public ArrayList<String> phoneBook() {
-        ArrayList<String> phoneLists = new ArrayList<String>();
-        try {
-
-            Cursor cursor = getURI();                    // 전화번호부 가져오기
-            int end = cursor.getCount();                // 전화번호부의 갯수 세기
-            String [] name = new String[end];    // 전화번호부의 이름을 저장할 배열 선언
-            String [] phone = new String[end];    // 전화번호부의 이름을 저장할 배열 선언
-            int count = 0;
-
-
-            if(cursor.moveToFirst()) {
-                // 컬럼명으로 컬럼 인덱스 찾기
-                // int idIndex = cursor.getColumnIndex("_id");
-                String path;//저장하는 곳의 경로
-                path = Environment.getExternalStorageDirectory().getAbsolutePath()+File.separator+"/TEST_TEXT_WRITE";
-
-                    File file;
-                    file = new File(path);
-                    if(!file.exists()){
-                        file.mkdirs();
-                    }
-                    file = new File(path+File.separator+"title"+".txt");
-
-                FileOutputStream fos = new FileOutputStream(file);
-                BufferedWriter buw = new BufferedWriter(new OutputStreamWriter(fos, "UTF8"));
-
-
-                do {
-                    // 요소값 얻기
-                    int id = cursor.getInt(0);
-                    // int id = cursor.getInt(idIndex);
-                    String phoneChk = cursor.getString(2);
-                    if (phoneChk.equals("1")) {
-                        Cursor phones = getContentResolver().query(
-                                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                                null,
-                                ContactsContract.CommonDataKinds.Phone.CONTACT_ID
-                                        + " = " + id, null, null);
-                        while (phones.moveToNext()) {
-                            phone[count] = phones
-                                    .getString(phones
-                                            .getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                        }
-                    }
-                    name[count] = cursor.getString(1);
-                    // 개별 연락처 삭제
-                    // rowNum = getBaseContext().getContentResolver().delete(RawContacts.CONTENT_URI, RawContacts._ID+ " =" + id,null);
-                    // 개별 연락처 수집
-                    phoneLists.add("\n" + String.format("% 4d", id) +", [이름] " + name[count]+", [번호] " + phone[count] + "\n");
-                    Toast.makeText(MainActivity.this, "\n"+id+", [이름] " + name[count]+", [번호]" + phone[count] + "\n", Toast.LENGTH_SHORT).show();
-                    // textView.append("\n" + id +", [이름] " + name[count]+", [번호] " + phone[count] + "\n");
-                    count++;
-                } while(cursor.moveToNext() || count > end);
+    protected String detectTestLandmarks(int id){
+        FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), id);
+        List<VisionDetRet> results = fDet.detect(bitmap);
+        String tempTestLandmarks = "";
+        for (final VisionDetRet ret : results) {
+            // Get 68 landmark points
+            ArrayList<Point> landmarks = ret.getFaceLandmarks();
+            Point start = landmarks.get(0);
+            Point end = landmarks.get(16);
+            int midX, midY;
+            midX = (end.x + start.x)/2;
+            midY = (end.y + start.y)/2;
+            int i = 0;
+            for (Point point : landmarks) {
+                int pointX = point.x;
+                int pointY = point.y;
+                tempTestLandmarks += Integer.toString(i++);
+                tempTestLandmarks += ": ";
+                tempTestLandmarks += "(";
+                tempTestLandmarks += Integer.toString(pointX-midX);
+                tempTestLandmarks += ", ";
+                tempTestLandmarks += Integer.toString(pointY-midY);
+                tempTestLandmarks += ")";
+                tempTestLandmarks += ", ";
             }
         }
-        catch (Exception e) {}
+        return tempTestLandmarks;
+    }
 
-        return phoneLists;
+    public void saveBitmaptoJpeg(Bitmap bitmap,String folder, String name){
+        String ex_storage =Environment.getExternalStorageDirectory().getAbsolutePath();
+        // Get Absolute Path in External Sdcard
+        String foler_name = "/"+folder+"/";
+        String file_name = name+".jpg";
+        String string_path = ex_storage+foler_name;
+
+        File file_path;
+        try{
+            file_path = new File(string_path);
+            if(!file_path.isDirectory()){
+                file_path.mkdirs();
+            }
+            FileOutputStream out = new FileOutputStream(string_path+file_name);
+
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.close();
+
+        }catch(FileNotFoundException exception){
+            Log.e("FileNotFoundException", exception.getMessage());
+        }catch(IOException exception){
+            Log.e("IOException", exception.getMessage());
+        }
     }
 
     @AfterViews
@@ -208,6 +269,7 @@ public class MainActivity extends AppCompatActivity {
     protected void searchPeople() {
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
+        sendIntent.putStringArrayListExtra("TestLandmarks", testLandmarks);
         startActivity(sendIntent);
     }
 
@@ -281,6 +343,7 @@ public class MainActivity extends AppCompatActivity {
             demoStaticImage();
         }
     }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -431,7 +494,7 @@ public class MainActivity extends AppCompatActivity {
                 tempLandmark += ",";
                 tempLandmark += Integer.toString(pointY);
                 tempLandmark += ",";
-                //canvas.drawCircle(pointX, pointY, 2, paint); 랜드마크 그리기
+                //canvas.drawCircle(pointX, pointY, 2, paint); //랜드마크 그리기
             }
             totalLandmarks.add(tempLandmark);
         }

@@ -6,7 +6,7 @@ android {
 
     defaultConfig {
         applicationId "com.cse.dlibtest"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion  rootProject.ext.androidCompileSdkVersion
         versionCode 1
         versionName "${rootProject.ext.releaseVersionName}"
@@ -47,6 +47,8 @@ dependencies {
     compile project(':dlib')
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
+    //ted
+    compile 'com.github.ParkSangGwon:TedPermission:v1.0.11'
 
     // Add AndroidJUnit
     androidTestCompile "com.android.support:support-annotations:${rootProject.ext.androidSupportSdkVersion}"
