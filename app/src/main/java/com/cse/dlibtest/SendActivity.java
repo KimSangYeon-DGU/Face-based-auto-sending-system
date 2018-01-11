@@ -32,21 +32,21 @@ public class SendActivity extends AppCompatActivity {
         for(int i = 0; i < totalSize; i++){
             face[i] = new Face();
         }
-        saveUserLandmark(face, totalLandmarks, totalSize);
-
-        //테스트 이미지
+        //주소록 사진의 랜드마크를 저장할 객체 생성
         Face[] addrBookFace = new Face[addrBookSize];
         for(int i = 0; i < addrBookSize; i++){
             addrBookFace[i] = new Face();
         }
-        saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize);
+        saveUserLandmark(face, totalLandmarks, totalSize); //현재 사진 속 인물의 랜드마크 저장
+        saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
 
-        //비교 진행
+        //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
         for(int i = 0; i < totalSize; i++){
             for(int j = 0; j < addrBookSize; j++) {
                 comparator.compare(face[i], addrBookFace[j]);
             }
         }
+        //뒤로 가기 버튼 -> 홈 화면으로 이동
         Button mBackButton = (Button)findViewById(R.id.btn_back);
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -59,6 +59,7 @@ public class SendActivity extends AppCompatActivity {
         });
     }
 
+    //Face객체에 랜드마크 정보 저장
     protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){
         Point[] point = new Point[68];
         for(int i = 0; i < size; i++) {
@@ -68,6 +69,8 @@ public class SendActivity extends AppCompatActivity {
             }
         }
     }
+
+    //스트링을 문법에 맞게 Parsing하여 Point 타입으로 변환
     protected Point[] convertStringToPoint(String str){
         Point[] point = new Point[LANDMARK_SIZE];
         for(int i = 0; i < point.length; i++){

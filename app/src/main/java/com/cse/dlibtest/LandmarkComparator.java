@@ -29,17 +29,7 @@ public class LandmarkComparator {
             totalDistance += outlines[i];
         }
         temp2 = calculateRatio(outlines, totalDistance, OUTLINE_LANDMARK_SIZE);
-        prob = getMeanSquaredError(temp1, temp2, OUTLINE_LANDMARK_SIZE);
         return prob;
-    }
-
-    //평균제곱오차
-    public double getMeanSquaredError(double[] ans, double[] comp, int size){
-        double sum = 0.0;
-        for(int i = 0; i < OUTLINE_LANDMARK_SIZE; i++){
-            sum += Math.pow((ans[i] - comp[i]) , 2);
-        }
-        return sum / OUTLINE_LANDMARK_SIZE;
     }
 
     //비율 구하기
