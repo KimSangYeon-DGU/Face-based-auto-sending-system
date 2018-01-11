@@ -24,23 +24,29 @@ public class SendActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
         ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        ArrayList<String> testLandmarks = getIntent().getExtras().getStringArrayList("TestLandmarks");
+        ArrayList<String> addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
 
-        int size = totalLandmarks.size();
-        face = new Face[size];
-        for(int i = 0; i < size; i++){
+        int totalSize = totalLandmarks.size();
+        int addrBookSize = addrBookLandmarks.size();
+        face = new Face[totalSize];
+        for(int i = 0; i < totalSize; i++){
             face[i] = new Face();
         }
-        saveUserLandmark(face, totalLandmarks, size);
+        saveUserLandmark(face, totalLandmarks, totalSize);
 
         //테스트 이미지
-        Face[] test = new Face[1];
-        test[0] = new Face();
-        saveUserLandmark(test, testLandmarks, testLandmarks.size());
+        Face[] addrBookFace = new Face[addrBookSize];
+        for(int i = 0; i < addrBookSize; i++){
+            addrBookFace[i] = new Face();
+        }
+        saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize);
 
         //비교 진행
-        comparator.compare(face[0], test[0]);
-
+        for(int i = 0; i < totalSize; i++){
+            for(int j = 0; j < addrBookSize; j++) {
+                comparator.compare(face[i], addrBookFace[j]);
+            }
+        }
         Button mBackButton = (Button)findViewById(R.id.btn_back);
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
