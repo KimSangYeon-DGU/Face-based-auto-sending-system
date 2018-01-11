@@ -41,9 +41,9 @@ public class SendActivity extends AppCompatActivity {
         saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
 
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
-        for(int i = 0; i < totalSize; i++){
-            for(int j = 0; j < addrBookSize; j++) {
-                comparator.compare(face[i], addrBookFace[j]);
+        for(int i = 0; i < addrBookSize; i++){
+            for(int j = 0; j < totalSize; j++) {
+                comparator.compare(addrBookFace[i], face[j]);
             }
         }
         //뒤로 가기 버튼 -> 홈 화면으로 이동
