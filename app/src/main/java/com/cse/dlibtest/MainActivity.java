@@ -95,7 +95,7 @@ public class MainActivity extends AppCompatActivity {
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             verifyPermissions(this);
         }
-
+        callVirtualAddressBook();
     }
     //가상 주소록 이미지 불러오기
     protected void callVirtualAddressBook(){

@@ -39,12 +39,25 @@ public class SendActivity extends AppCompatActivity {
         }
         saveUserLandmark(face, totalLandmarks, totalSize); //현재 사진 속 인물의 랜드마크 저장
         saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
-
+        for(int i = 0; i < totalSize; i++){
+            face[i].setFaceRatio();
+        }
+        for(int i = 0; i < addrBookSize; i++){
+            addrBookFace[i].setFaceRatio();
+        }
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
+        double temp = 0, results = 0;
+        int personA = 0, personB = 0;
         for(int i = 0; i < addrBookSize; i++){
             for(int j = 0; j < totalSize; j++) {
-                comparator.compare(addrBookFace[i], face[j]);
+                temp = comparator.compare(addrBookFace[i], face[j]);
+                if(temp >= results){
+                    results = temp;
+                    personA = i;
+                    personB = j;
+                }
             }
+            System.out.println(personA + "와 " + personB+"의 닮음도는 "+ results + "입니다.");
         }
         //뒤로 가기 버튼 -> 홈 화면으로 이동
         Button mBackButton = (Button)findViewById(R.id.btn_back);

@@ -34,9 +34,9 @@ public class Face {
     }
 
     //얼굴 비율 세팅
-    public void setFaceRatio(Face face){
+    public void setFaceRatio(){
         if(!isRatioSet()) {
-            setDistance(face); //비율을 구하기 위해 사전에 필요한 거리를 계산해놓는다.
+            setDistance(this); //비율을 구하기 위해 사전에 필요한 거리를 계산해놓는다.
             this.noseAndChinRatio = calculateRatio(noseAndChinDist, verticalDist, NOSE_AND_CHIN_RATIO_SIZE);
             this.glabellaRatio = calculateRatio(glabellaDist, horizontalDist, GLABELLA_RATIO_SIZE);
             this.faceAreaRatio = calculateRatio(faceAreaDist, horizontalDist, FACE_AREA_RATIO_SIZE);
