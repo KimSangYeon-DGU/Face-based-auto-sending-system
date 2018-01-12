@@ -1,6 +1,8 @@
 package com.cse.dlibtest;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -23,15 +25,40 @@ public class SendActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
+        startSearchPeople();
+
+        //뒤로 가기 버튼 -> 홈 화면으로 이동
+        Button mBackButton = (Button)findViewById(R.id.btn_back);
+        mBackButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent moveToMainIntent = new Intent(SendActivity.this, MainActivity_.class); //SendActivity에서 MainActivity로 이동
+                moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //액티비티간 이동중에 스택 중간에 저장되어있는 액티비티를 지움
+                moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //띄우려는 액티비티가 스택 맨위에 이미 실행 중이면 재사용함.
+                startActivity(moveToMainIntent); //Activity 시작
+            }
+        });
+    }
+    public void startSearchPeople(){
         ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
         ArrayList<String> addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-
+        String[] name = new String[3];
+        String[] phoneNumber = new String[3];
+        Bitmap[] images = new Bitmap[3];
         int totalSize = totalLandmarks.size();
         int addrBookSize = addrBookLandmarks.size();
+
+        setAddressInfo(name, phoneNumber, images); //가상 주소록 정보 저장
         face = new Face[totalSize];
         for(int i = 0; i < totalSize; i++){
             face[i] = new Face();
         }
+        //주소록
+        AdressBook[] adressBook = new AdressBook[addrBookSize];
+        for(int i = 0; i< addrBookSize; i++){
+            adressBook[i] = new AdressBook(i, name[i], phoneNumber[i], images[i]);
+        }
+
         //주소록 사진의 랜드마크를 저장할 객체 생성
         Face[] addrBookFace = new Face[addrBookSize];
         for(int i = 0; i < addrBookSize; i++){
@@ -48,9 +75,9 @@ public class SendActivity extends AppCompatActivity {
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
         double temp = 0, results = 0;
         int personA = 0, personB = 0;
-        for(int i = 0; i < addrBookSize; i++){
-            for(int j = 0; j < totalSize; j++) {
-                temp = comparator.compare(addrBookFace[i], face[j]);
+        for(int i = 0; i < totalSize; i++){
+            for(int j = 0; j < addrBookSize; j++) {
+                temp = comparator.compare(addrBookFace[j], face[i]);
                 if(temp >= results){
                     results = temp;
                     personA = i;
@@ -59,19 +86,18 @@ public class SendActivity extends AppCompatActivity {
             }
             System.out.println(personA + "와 " + personB+"의 닮음도는 "+ results + "입니다.");
         }
-        //뒤로 가기 버튼 -> 홈 화면으로 이동
-        Button mBackButton = (Button)findViewById(R.id.btn_back);
-        mBackButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent moveToMainIntent = new Intent(SendActivity.this, MainActivity_.class); //SendActivity에서 MainActivity로 이동
-                moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //액티비티간 이동중에 스택 중간에 저장되어있는 액티비티를 지움
-                moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //띄우려는 액티비티가 스택 맨위에 이미 실행 중이면 재사용함.
-                startActivity(moveToMainIntent); //Activity 시작
-            }
-        });
     }
-
+    public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
+        name[0] = "김상연";
+        name[1] = "나선엽";
+        name[2] = "강백진";
+        phoneNumber[0] = "010-2222-2232";
+        phoneNumber[1] = "010-3333-3323";
+        phoneNumber[2] = "010-5555-3212";
+        images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.s2);
+        images[1] = BitmapFactory.decodeResource(getResources(), R.drawable.n2);
+        images[2] = BitmapFactory.decodeResource(getResources(), R.drawable.b2);
+    }
     //Face객체에 랜드마크 정보 저장
     protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){
         Point[] point = new Point[68];
