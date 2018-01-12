@@ -84,7 +84,7 @@ public class SendActivity extends AppCompatActivity {
                     personB = j;
                 }
             }
-            System.out.println(personA + "와 " + personB+"의 닮음도는 "+ results + "입니다.");
+            System.out.println(personA + "와 " + adressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }
     }
     public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
@@ -94,9 +94,9 @@ public class SendActivity extends AppCompatActivity {
         phoneNumber[0] = "010-2222-2232";
         phoneNumber[1] = "010-3333-3323";
         phoneNumber[2] = "010-5555-3212";
-        images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.s2);
-        images[1] = BitmapFactory.decodeResource(getResources(), R.drawable.n2);
-        images[2] = BitmapFactory.decodeResource(getResources(), R.drawable.b2);
+        images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
+        images[1] = BitmapFactory.decodeResource(getResources(), R.drawable.na);
+        images[2] = BitmapFactory.decodeResource(getResources(), R.drawable.kang);
     }
     //Face객체에 랜드마크 정보 저장
     protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){

@@ -100,9 +100,9 @@ public class MainActivity extends AppCompatActivity {
     //가상 주소록 이미지 불러오기
     protected void callVirtualAddressBook(){
         int[] path = new int[3];
-        path[0] = R.drawable.s2;
-        path[1] = R.drawable.n2;
-        path[2] = R.drawable.b2;
+        path[0] = R.drawable.kim;
+        path[1] = R.drawable.na;
+        path[2] = R.drawable.kang;
 
         String testLandmark = "";
         for(int i = 0 ; i < path.length; i++) {

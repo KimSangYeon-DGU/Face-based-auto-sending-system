@@ -31,7 +31,7 @@ public class LandmarkComparator {
         compRatio = comp.getNoseAndChinRatio();
         faceRatio = face.getNoseAndChinRatio();
         for(int i = 0; i < NOSE_AND_CHIN_RATIO_SIZE; i++){
-            error += 15*Math.abs(compRatio[i] - faceRatio[i]);
+            error += 50*Math.abs(compRatio[i] - faceRatio[i]);
         }
         return error;
     }
@@ -42,7 +42,7 @@ public class LandmarkComparator {
         compRatio = comp.getFaceAreaRatio();
         faceRatio = face.getFaceAreaRatio();
         for(int i = 0; i < FACE_AREA_RATIO_SIZE; i++){
-            error += 42*Math.abs(compRatio[i] - faceRatio[i]);
+            error += 32*Math.abs(compRatio[i] - faceRatio[i]);
         }
         return error;
     }
