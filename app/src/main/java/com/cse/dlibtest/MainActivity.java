@@ -376,7 +376,17 @@ public class MainActivity extends AppCompatActivity {
             bounds.top = (int) (ret.getTop() * resizeRatio);
             bounds.right = (int) (ret.getRight() * resizeRatio);
             bounds.bottom = (int) (ret.getBottom() * resizeRatio);
-            icon = Bitmap.createBitmap(bm, bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+            int imageWidth = bounds.right - bounds.left;
+            int imageHeight = bounds.bottom - bounds.top;
+            int x = bounds.left - (imageWidth/3);
+            int y = (bounds.top - (imageHeight/3));
+            int exWidth = imageWidth + (imageWidth/2);
+            int exHeight = imageHeight + (imageWidth/2);
+            if(x < 0) x = 0;
+            if(y < 0) y = 0;
+            if(exWidth > bm.getWidth()) exWidth = bm.getWidth();
+            if(exHeight > bm.getHeight()) exHeight = bm.getHeight();
+            icon = Bitmap.createBitmap(bm, x, y, exWidth, exHeight);
             icon = getResizedBitmap(icon, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT); //icon으로 재생성
 
             //비트맵인 icon을 byyeArray로 변환후 저장

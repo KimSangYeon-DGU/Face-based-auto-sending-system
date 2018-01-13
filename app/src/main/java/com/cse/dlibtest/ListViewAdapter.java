@@ -44,8 +44,10 @@ public class ListViewAdapter extends BaseAdapter{
 
         // 화면에 표시될 View(Layout이 inflate된)으로부터 위젯에 대한 참조 획득
         ImageView imageView = (ImageView)convertView.findViewById(R.id.imageView1);
+        ImageView iconView = (ImageView)convertView.findViewById(R.id.iv_faceicon);
         TextView nameTextView = (TextView)convertView.findViewById(R.id.tv_name);
         TextView phoneNumberTextView = (TextView)convertView.findViewById(R.id.tv_phoneNumber);
+        TextView similarityTextView = (TextView)convertView.findViewById(R.id.tv_similarity);
 
         // Data Set(listViewItemList)에서 position에 위치한 데이터 참조 획득
         ListViewItem listViewItem = listViewItemList.get(position);
@@ -54,6 +56,8 @@ public class ListViewAdapter extends BaseAdapter{
         imageView.setImageBitmap(listViewItem.getImageBitmap());
         nameTextView.setText(listViewItem.getName());
         phoneNumberTextView.setText(listViewItem.getPhoneNumber());
+        iconView.setImageBitmap(listViewItem.getIconBitmap());
+        similarityTextView.setText(listViewItem.getSimilarity());
 
         return convertView;
     }
@@ -71,12 +75,14 @@ public class ListViewAdapter extends BaseAdapter{
     }
 
     // 아이템 데이터 추가를 위한 함수. 개발자가 원하는대로 작성 가능.
-    public void addItem(Bitmap image, String name, String phoneNumber, boolean select) {
+    public void addItem(Bitmap image, String name, String phoneNumber, Bitmap icon, String similarity) {
         ListViewItem item = new ListViewItem();
 
         item.setImageBitmap(image);
         item.setName(name);
         item.setPhoneNumber(phoneNumber);
+        item.setIconBitmap(icon);
+        item.setSimilarity(similarity);
 
         listViewItemList.add(item);
     }

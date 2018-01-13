@@ -9,8 +9,18 @@ import android.graphics.drawable.Drawable;
 
 public class ListViewItem {
     private Bitmap imageBitmap;
+    private Bitmap iconBitmap;
+    private String similarity;
     private String name;
     private String phoneNumber;
+
+    public void setIconBitmap(Bitmap iconBitmap) {
+        this.iconBitmap = iconBitmap;
+    }
+
+    public void setSimilarity(String similarity) {
+        this.similarity = similarity;
+    }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -26,6 +36,14 @@ public class ListViewItem {
 
     public String getPhoneNumber() {
         return this.phoneNumber;
+    }
+
+    public Bitmap getIconBitmap() {
+        return iconBitmap;
+    }
+
+    public String getSimilarity() {
+        return similarity;
     }
 
     public String getName() {

@@ -1,7 +1,5 @@
 package com.cse.dlibtest;
 
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -10,17 +8,12 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.telephony.SmsManager;
-import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
-import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -33,7 +26,7 @@ public class SendActivity extends AppCompatActivity {
     final private int ICON_IMAGE_HEIGHT = 128;
     private Face[] face;
     private LandmarkComparator comparator = new LandmarkComparator();
-    private ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
+    private ArrayList<AddressBook> candidate = new ArrayList<AddressBook>();
     private ArrayList<String> totalLandmarks;
     private ArrayList<String> addrBookLandmarks;
     private ArrayList<Bitmap> iconBitmaps = new ArrayList<Bitmap>();
@@ -115,7 +108,7 @@ public class SendActivity extends AppCompatActivity {
         for(int i = 0; i < mCandidateSize; i++) {
             // 첫 번째 아이템 추가.
             Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
-            adapter.addItem(icon, candidate.get(i).getName() , candidate.get(i).getPhoneNumber(), false);
+            adapter.addItem(icon, candidate.get(i).getName(), candidate.get(i).getPhoneNumber(), candidate.get(i).getIcon(), candidate.get(i).getSimilarity()+"%");
         }
     }
 
@@ -133,9 +126,9 @@ public class SendActivity extends AppCompatActivity {
             face[i] = new Face();
         }
         //주소록
-        AdressBook[] adressBook = new AdressBook[addrBookSize];
+        AddressBook[] adressBook = new AddressBook[addrBookSize];
         for(int i = 0; i< addrBookSize; i++){
-            adressBook[i] = new AdressBook(i, name[i], phoneNumber[i], images[i]);
+            adressBook[i] = new AddressBook(i, name[i], phoneNumber[i], images[i]);
         }
 
         //주소록 사진의 랜드마크를 저장할 객체 생성
@@ -167,6 +160,9 @@ public class SendActivity extends AppCompatActivity {
                 }
             }
             if(personB != -1) {
+                int probability = (int)results;
+                adressBook[personB].setIcon(iconBitmaps.get(personA));
+                adressBook[personB].setSimilarity(Integer.toString(probability));
                 candidate.add(adressBook[personB]);
             }
             System.out.println(personA + "와 " + adressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
@@ -176,15 +172,14 @@ public class SendActivity extends AppCompatActivity {
     public void sendMMS(String phoneNumber, String msg, Bitmap image){
         String pathOfBitmap = MediaStore.Images.Media.insertImage(getContentResolver(), image,"title", null);
         Uri bmpUri = Uri.parse(pathOfBitmap);
-        final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
-        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        emailIntent.putExtra("address", phoneNumber);
-        emailIntent.putExtra("sms_body", msg);
-        emailIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
-        emailIntent.setType("image/png");
-        emailIntent.setAction(Intent.ACTION_SEND);
-        startActivity(emailIntent);
-        finish();
+        final Intent messageIntent = new Intent(android.content.Intent.ACTION_SEND);
+        messageIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        messageIntent.putExtra("address", phoneNumber);
+        messageIntent.putExtra("sms_body", msg);
+        messageIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+        messageIntent.setType("image/png");
+        messageIntent.setAction(Intent.ACTION_SEND);
+        startActivity(messageIntent);
     }
     //가상 주소록 정보 저장
     public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
