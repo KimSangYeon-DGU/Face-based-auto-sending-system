@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -18,9 +19,11 @@ import java.util.ArrayList;
  */
 
 public class SendActivity extends AppCompatActivity {
-    Face[] face;
     final private int LANDMARK_SIZE = 68;
+    Face[] face;
     LandmarkComparator comparator = new LandmarkComparator();
+    ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +45,7 @@ public class SendActivity extends AppCompatActivity {
     public void startSearchPeople(){
         ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
         ArrayList<String> addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
+        String mImagePath = getIntent().getStringExtra("ImagePath");
         String[] name = new String[3];
         String[] phoneNumber = new String[3];
         Bitmap[] images = new Bitmap[3];
@@ -87,11 +91,23 @@ public class SendActivity extends AppCompatActivity {
             System.out.println(personA + "와 " + adressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }
     }
+    //MMS 전송
+    public void sendMMS(String phoneNumber, String msg, String imagePath){
+        Intent sendIntent = new Intent(Intent.ACTION_SEND);
+        sendIntent.setClassName("com.android.mms", "com.android.mms.ui.ComposeMessageActivity");
+        sendIntent.putExtra("address", phoneNumber);
+        sendIntent.putExtra("sms_body", msg);
+        sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imagePath));
+        sendIntent.setType("image/*");
+        sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        startActivity(sendIntent);
+    }
+    //가상 주소록 정보 저장
     public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
         name[0] = "김상연";
         name[1] = "나선엽";
         name[2] = "강백진";
-        phoneNumber[0] = "010-2222-2232";
+        phoneNumber[0] = "010-7940-5173";
         phoneNumber[1] = "010-3333-3323";
         phoneNumber[2] = "010-5555-3212";
         images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.kim);

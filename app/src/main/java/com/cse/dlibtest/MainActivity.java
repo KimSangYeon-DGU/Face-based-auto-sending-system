@@ -150,6 +150,7 @@ public class MainActivity extends AppCompatActivity {
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
         sendIntent.putStringArrayListExtra("AddrBookLandmarks", testLandmarks);
+        sendIntent.putExtra("ImagePath", mTestImgPath);
         startActivity(sendIntent);
     }
 
