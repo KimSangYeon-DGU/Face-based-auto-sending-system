@@ -27,16 +27,29 @@ public class SendActivity extends AppCompatActivity {
     Face[] face;
     LandmarkComparator comparator = new LandmarkComparator();
     ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
+    ArrayList<String> totalLandmarks;
+    ArrayList<String> addrBookLandmarks;
+    String mImagePath;
+
+    ListView listview ;
+    ListViewAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
+
+        //메인 액티비티에서 값 넘겨받기
+        totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
+        addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
+        mImagePath = getIntent().getStringExtra("ImagePath");
+
         startSearchPeople(); //사진속에 사람을 찾음
         showListView(); //찾은 사람들을 리스트 뷰에 뿌려줌
 
         //뒤로 가기 버튼 -> 홈 화면으로 이동
         Button mBackButton = (Button)findViewById(R.id.btn_back);
+        Button mSendButton = (Button)findViewById(R.id.btn_send);
         mBackButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -46,13 +59,22 @@ public class SendActivity extends AppCompatActivity {
                 startActivity(moveToMainIntent); //Activity 시작
             }
         });
+
+        mSendButton.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                /*
+                int mCandidateSize = candidate.size();
+                for(int i = 0; i < mCandidateSize; i++) {
+                    sendMMS(candidate.get(i).getPhoneNumber(), "같이 찍은 사진입니다.", mImagePath);
+                }
+                */
+            }
+        });
     }
     public void showListView(){
-        ListView listview ;
-        ListViewAdapter adapter;
-
         // Adapter 생성
-        adapter = new ListViewAdapter() ;
+        adapter = new ListViewAdapter();
 
         // 리스트뷰 참조 및 Adapter달기
         listview = (ListView) findViewById(R.id.lv_list);
@@ -66,9 +88,7 @@ public class SendActivity extends AppCompatActivity {
     }
 
     public void startSearchPeople(){
-        ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        ArrayList<String> addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-        String mImagePath = getIntent().getStringExtra("ImagePath");
+
         String[] name = new String[3];
         String[] phoneNumber = new String[3];
         Bitmap[] images = new Bitmap[3];
@@ -120,7 +140,8 @@ public class SendActivity extends AppCompatActivity {
         }
     }
     //MMS 전송
-    public void sendMMS(String phoneNumber, String msg, String imagePath){
+    public void sendMMS(String _phoneNumber, String msg, String imagePath){
+        String phoneNumber = _phoneNumber.replaceAll("-", "");
         Intent sendIntent = new Intent(Intent.ACTION_SEND);
         sendIntent.setClassName("com.android.mms", "com.android.mms.ui.ComposeMessageActivity");
         sendIntent.putExtra("address", phoneNumber);
