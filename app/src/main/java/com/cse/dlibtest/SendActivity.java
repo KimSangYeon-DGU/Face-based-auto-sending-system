@@ -70,13 +70,23 @@ public class SendActivity extends AppCompatActivity {
                 SparseBooleanArray checkedItems = listview.getCheckedItemPositions();
                 Object obj = new Object();
                 int count = adapter.getCount();
+                boolean isThere = false;
+                String phoneNumber = "";
                 for(int i =  0; i < count; i++){
                     ListViewItem lv = new ListViewItem();
-                    if(checkedItems.get(i)){
+                    if(checkedItems.get(i)) {
                         lv = (ListViewItem) adapter.getItem(i);
-                        sendMMS(lv.getPhoneNumber(), "함께 찍은 사진보냅니다.", bmp);
+                        if (!isThere) {
+                            phoneNumber += lv.getPhoneNumber().replaceAll("-", "");
+                        } else {
+                            phoneNumber += ";";
+                            phoneNumber += lv.getPhoneNumber().replaceAll("-", "");
+                        }
+                        isThere = true;
                     }
                 }
+                if(isThere)
+                    sendMMS(phoneNumber, "함께 찍은 사진보냅니다.", bmp);
             }
         });
     }
@@ -155,8 +165,7 @@ public class SendActivity extends AppCompatActivity {
         }
     }
     //MMS 전송
-    public void sendMMS(String _phoneNumber, String msg, Bitmap image){
-        String phoneNumber = _phoneNumber.replaceAll("-", "");
+    public void sendMMS(String phoneNumber, String msg, Bitmap image){
         String pathOfBitmap = MediaStore.Images.Media.insertImage(getContentResolver(), image,"title", null);
         Uri bmpUri = Uri.parse(pathOfBitmap);
         final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
