@@ -1,20 +1,25 @@
 package com.cse.dlibtest;
 
+import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.SmsManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 
+import java.io.OutputStream;
 import java.util.ArrayList;
 
 /**
@@ -31,6 +36,7 @@ public class SendActivity extends AppCompatActivity {
     ArrayList<String> totalLandmarks;
     ArrayList<String> addrBookLandmarks;
     String mImagePath;
+    Bitmap bmp;
 
     ListView listview ;
     ListViewAdapter adapter;
@@ -40,11 +46,7 @@ public class SendActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
 
-        //메인 액티비티에서 값 넘겨받기
-        totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-        mImagePath = getIntent().getStringExtra("ImagePath");
-
+        getDataFromMainActivity(); //메인 액티비티에서 값 넘겨받기
         startSearchPeople(); //사진속에 사람을 찾음
         showListView(); //찾은 사람들을 리스트 뷰에 뿌려줌
 
@@ -61,18 +63,29 @@ public class SendActivity extends AppCompatActivity {
             }
         });
 
+        //Send버튼 눌렀을 때의 동작
         mSendButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
                 SparseBooleanArray checkedItems = listview.getCheckedItemPositions();
+                Object obj = new Object();
                 int count = adapter.getCount();
                 for(int i =  0; i < count; i++){
+                    ListViewItem lv = new ListViewItem();
                     if(checkedItems.get(i)){
-                        //sendMMS();
+                        lv = (ListViewItem) adapter.getItem(i);
+                        sendMMS(lv.getPhoneNumber(), "함께 찍은 사진보냅니다.", bmp);
                     }
                 }
             }
         });
+    }
+    public void getDataFromMainActivity(){
+        totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
+        addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
+        mImagePath = getIntent().getStringExtra("ImagePath");
+        byte[] byteArray = getIntent().getByteArrayExtra("image");
+        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
     }
     public void showListView(){
         // Adapter 생성
@@ -142,16 +155,19 @@ public class SendActivity extends AppCompatActivity {
         }
     }
     //MMS 전송
-    public void sendMMS(String _phoneNumber, String msg, String imagePath){
+    public void sendMMS(String _phoneNumber, String msg, Bitmap image){
         String phoneNumber = _phoneNumber.replaceAll("-", "");
-        Intent sendIntent = new Intent(Intent.ACTION_SEND);
-        sendIntent.setClassName("com.android.mms", "com.android.mms.ui.ComposeMessageActivity");
-        sendIntent.putExtra("address", phoneNumber);
-        sendIntent.putExtra("sms_body", msg);
-        sendIntent.putExtra(Intent.EXTRA_STREAM, Uri.parse(imagePath));
-        sendIntent.setType("image/*");
-        sendIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(sendIntent);
+        String pathOfBitmap = MediaStore.Images.Media.insertImage(getContentResolver(), image,"title", null);
+        Uri bmpUri = Uri.parse(pathOfBitmap);
+        final Intent emailIntent = new Intent(android.content.Intent.ACTION_SEND);
+        emailIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        emailIntent.putExtra("address", phoneNumber);
+        emailIntent.putExtra("sms_body", msg);
+        emailIntent.putExtra(Intent.EXTRA_STREAM, bmpUri);
+        emailIntent.setType("image/png");
+        emailIntent.setAction(Intent.ACTION_SEND);
+        startActivity(emailIntent);
+        finish();
     }
     //가상 주소록 정보 저장
     public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){

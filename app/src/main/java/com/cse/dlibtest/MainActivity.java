@@ -45,6 +45,7 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +57,7 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_CODE_PERMISSION = 2;
-
+    private Bitmap bm;
     private static final String TAG = "MainActivity";
     private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
@@ -147,11 +148,16 @@ public class MainActivity extends AppCompatActivity {
 
     @Click({R.id.fab_process}) //process button
     protected void searchPeople() {
+        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+        bm.compress(Bitmap.CompressFormat.PNG, 100, bStream);
+        byte[] byteArray = bStream.toByteArray();
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
         sendIntent.putStringArrayListExtra("AddrBookLandmarks", testLandmarks);
         sendIntent.putExtra("ImagePath", mTestImgPath);
+        sendIntent.putExtra("image", byteArray);
         startActivity(sendIntent);
+        finish();
     }
 
     /**
@@ -323,7 +329,7 @@ public class MainActivity extends AppCompatActivity {
     protected BitmapDrawable drawRect(String path, List<VisionDetRet> results, int color) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inSampleSize = 1;
-        Bitmap bm = BitmapFactory.decodeFile(path, options);
+        bm = BitmapFactory.decodeFile(path, options);
         android.graphics.Bitmap.Config bitmapConfig = bm.getConfig();
         // set default bitmap config if none
         if (bitmapConfig == null) {
@@ -374,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
                 tempLandmark += ",";
                 tempLandmark += Integer.toString(pointY);
                 tempLandmark += ",";
-                canvas.drawCircle(pointX, pointY, 2, paint); //랜드마크 그리기
+                //canvas.drawCircle(pointX, pointY, 2, paint); //랜드마크 그리기
             }
             totalLandmarks.add(tempLandmark);
         }
