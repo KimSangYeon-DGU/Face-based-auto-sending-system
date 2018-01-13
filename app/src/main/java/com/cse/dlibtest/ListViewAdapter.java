@@ -1,6 +1,7 @@
 package com.cse.dlibtest;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -51,7 +52,7 @@ public class ListViewAdapter extends BaseAdapter{
         ListViewItem listViewItem = listViewItemList.get(position);
 
         // 아이템 내 각 위젯에 데이터 반영
-        imageView.setImageDrawable(listViewItem.getImageDrawable());
+        imageView.setImageBitmap(listViewItem.getImageBitmap());
         nameTextView.setText(listViewItem.getName());
         phoneNumberTextView.setText(listViewItem.getPhoneNumber());
         checkBoxView.setChecked(listViewItem.getCheckbox());
@@ -72,10 +73,10 @@ public class ListViewAdapter extends BaseAdapter{
     }
 
     // 아이템 데이터 추가를 위한 함수. 개발자가 원하는대로 작성 가능.
-    public void addItem(Drawable image, String name, String phoneNumber, boolean select) {
+    public void addItem(Bitmap image, String name, String phoneNumber, boolean select) {
         ListViewItem item = new ListViewItem();
 
-        item.setImageDrawable(image);
+        item.setImageBitmap(image);
         item.setName(name);
         item.setPhoneNumber(phoneNumber);
         item.setCheckbox(select);

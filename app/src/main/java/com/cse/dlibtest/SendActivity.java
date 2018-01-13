@@ -7,10 +7,12 @@ import android.graphics.Point;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ListView;
 
 import java.util.ArrayList;
 
@@ -20,6 +22,8 @@ import java.util.ArrayList;
 
 public class SendActivity extends AppCompatActivity {
     final private int LANDMARK_SIZE = 68;
+    final private int ICON_IMAGE_WIDTH = 128;
+    final private int ICON_IMAGE_HEIGHT = 128;
     Face[] face;
     LandmarkComparator comparator = new LandmarkComparator();
     ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
@@ -28,7 +32,8 @@ public class SendActivity extends AppCompatActivity {
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_send);
-        startSearchPeople();
+        startSearchPeople(); //사진속에 사람을 찾음
+        showListView(); //찾은 사람들을 리스트 뷰에 뿌려줌
 
         //뒤로 가기 버튼 -> 홈 화면으로 이동
         Button mBackButton = (Button)findViewById(R.id.btn_back);
@@ -42,6 +47,24 @@ public class SendActivity extends AppCompatActivity {
             }
         });
     }
+    public void showListView(){
+        ListView listview ;
+        ListViewAdapter adapter;
+
+        // Adapter 생성
+        adapter = new ListViewAdapter() ;
+
+        // 리스트뷰 참조 및 Adapter달기
+        listview = (ListView) findViewById(R.id.lv_list);
+        listview.setAdapter(adapter);
+        int mCandidateSize = candidate.size();
+        for(int i = 0; i < mCandidateSize; i++) {
+            // 첫 번째 아이템 추가.
+            Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
+            adapter.addItem(icon, candidate.get(i).getName() , candidate.get(i).getPhoneNumber(), false);
+        }
+    }
+
     public void startSearchPeople(){
         ArrayList<String> totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
         ArrayList<String> addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
@@ -78,8 +101,10 @@ public class SendActivity extends AppCompatActivity {
         }
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
         double temp = 0, results = 0;
-        int personA = 0, personB = 0;
+        int personA, personB;
         for(int i = 0; i < totalSize; i++){
+            personA = -1;
+            personB = -1;
             for(int j = 0; j < addrBookSize; j++) {
                 temp = comparator.compare(addrBookFace[j], face[i]);
                 if(temp >= results){
@@ -87,6 +112,9 @@ public class SendActivity extends AppCompatActivity {
                     personA = i;
                     personB = j;
                 }
+            }
+            if(personB != -1) {
+                candidate.add(adressBook[personB]);
             }
             System.out.println(personA + "와 " + adressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }

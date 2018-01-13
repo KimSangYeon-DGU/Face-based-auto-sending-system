@@ -1,5 +1,6 @@
 package com.cse.dlibtest;
 
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 
 /**
@@ -7,7 +8,7 @@ import android.graphics.drawable.Drawable;
  */
 
 public class ListViewItem {
-    private Drawable imageDrawable;
+    private Bitmap imageBitmap;
     private String name;
     private String phoneNumber;
     private boolean checkbox;
@@ -24,8 +25,8 @@ public class ListViewItem {
         this.name = name;
     }
 
-    public void setImageDrawable(Drawable imageDrawable) {
-        this.imageDrawable = imageDrawable;
+    public void setImageBitmap(Bitmap imageBitmap) {
+        this.imageBitmap = imageBitmap;
     }
 
     public boolean getCheckbox(){
@@ -40,7 +41,7 @@ public class ListViewItem {
         return this.name;
     }
 
-    public Drawable getImageDrawable() {
-        return this.imageDrawable;
+    public Bitmap getImageBitmap() {
+        return imageBitmap;
     }
 }
