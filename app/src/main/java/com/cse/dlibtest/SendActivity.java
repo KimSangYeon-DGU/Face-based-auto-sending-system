@@ -10,6 +10,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.util.SparseBooleanArray;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
@@ -63,12 +64,13 @@ public class SendActivity extends AppCompatActivity {
         mSendButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                /*
-                int mCandidateSize = candidate.size();
-                for(int i = 0; i < mCandidateSize; i++) {
-                    sendMMS(candidate.get(i).getPhoneNumber(), "같이 찍은 사진입니다.", mImagePath);
+                SparseBooleanArray checkedItems = listview.getCheckedItemPositions();
+                int count = adapter.getCount();
+                for(int i =  0; i < count; i++){
+                    if(checkedItems.get(i)){
+                        //sendMMS();
+                    }
                 }
-                */
             }
         });
     }

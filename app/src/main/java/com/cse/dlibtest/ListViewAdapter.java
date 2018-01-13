@@ -46,7 +46,6 @@ public class ListViewAdapter extends BaseAdapter{
         ImageView imageView = (ImageView)convertView.findViewById(R.id.imageView1);
         TextView nameTextView = (TextView)convertView.findViewById(R.id.tv_name);
         TextView phoneNumberTextView = (TextView)convertView.findViewById(R.id.tv_phoneNumber);
-        CheckBox checkBoxView = (CheckBox)convertView.findViewById(R.id.cb_select);
 
         // Data Set(listViewItemList)에서 position에 위치한 데이터 참조 획득
         ListViewItem listViewItem = listViewItemList.get(position);
@@ -55,7 +54,6 @@ public class ListViewAdapter extends BaseAdapter{
         imageView.setImageBitmap(listViewItem.getImageBitmap());
         nameTextView.setText(listViewItem.getName());
         phoneNumberTextView.setText(listViewItem.getPhoneNumber());
-        checkBoxView.setChecked(listViewItem.getCheckbox());
 
         return convertView;
     }
@@ -79,7 +77,6 @@ public class ListViewAdapter extends BaseAdapter{
         item.setImageBitmap(image);
         item.setName(name);
         item.setPhoneNumber(phoneNumber);
-        item.setCheckbox(select);
 
         listViewItemList.add(item);
     }

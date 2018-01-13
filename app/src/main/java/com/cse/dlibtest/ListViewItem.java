@@ -11,11 +11,6 @@ public class ListViewItem {
     private Bitmap imageBitmap;
     private String name;
     private String phoneNumber;
-    private boolean checkbox;
-
-    public void setCheckbox(boolean checkbox) {
-        this.checkbox = checkbox;
-    }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
@@ -27,10 +22,6 @@ public class ListViewItem {
 
     public void setImageBitmap(Bitmap imageBitmap) {
         this.imageBitmap = imageBitmap;
-    }
-
-    public boolean getCheckbox(){
-        return this.checkbox;
     }
 
     public String getPhoneNumber() {
