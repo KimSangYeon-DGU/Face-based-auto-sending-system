@@ -1,12 +1,17 @@
 package com.cse.dlibtest;
 
+import android.graphics.Bitmap;
 import android.graphics.Point;
+
+import java.io.ByteArrayOutputStream;
+import java.io.Serializable;
 
 /**
  * Created by sy081 on 2018-01-04.
  */
 
-public class Face {
+public class Face{
+    private static final long serialVersionUID = 1L;
     final private int LANDMARK_SIZE = 68;
     final private int NOSE_AND_CHIN_RATIO_SIZE = 2;
     final private int GLABELLA_RATIO_SIZE = 1;
@@ -21,7 +26,6 @@ public class Face {
     private double[] glabellaRatio = new double[GLABELLA_RATIO_SIZE];
     private double[] faceAreaRatio = new double[FACE_AREA_RATIO_SIZE];
     private boolean ratioReady;
-
     public Face(){
         for(int i = 0; i < 68; i++){
             landmarks[i] = new Point();
@@ -85,6 +89,7 @@ public class Face {
     public double[] getFaceAreaRatio(){
         return this.faceAreaRatio;
     }
+
     public double[] getGlabellaRatio(){
         return this.glabellaRatio;
     }

@@ -16,6 +16,7 @@ import android.telephony.SmsManager;
 import android.util.Log;
 import android.util.SparseBooleanArray;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 
@@ -30,16 +31,16 @@ public class SendActivity extends AppCompatActivity {
     final private int LANDMARK_SIZE = 68;
     final private int ICON_IMAGE_WIDTH = 128;
     final private int ICON_IMAGE_HEIGHT = 128;
-    Face[] face;
-    LandmarkComparator comparator = new LandmarkComparator();
-    ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
-    ArrayList<String> totalLandmarks;
-    ArrayList<String> addrBookLandmarks;
-    String mImagePath;
-    Bitmap bmp;
+    private Face[] face;
+    private LandmarkComparator comparator = new LandmarkComparator();
+    private ArrayList<AdressBook> candidate = new ArrayList<AdressBook>();
+    private ArrayList<String> totalLandmarks;
+    private ArrayList<String> addrBookLandmarks;
+    private ArrayList<Bitmap> iconBitmaps = new ArrayList<Bitmap>();
+    private Bitmap bmp;
 
-    ListView listview ;
-    ListViewAdapter adapter;
+    private ListView listview ;
+    private ListViewAdapter adapter;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,15 +87,21 @@ public class SendActivity extends AppCompatActivity {
                     }
                 }
                 if(isThere)
-                    sendMMS(phoneNumber, "함께 찍은 사진보냅니다.", bmp);
+                    sendMMS(phoneNumber, "함께 찍은 사진입니다.", bmp);
             }
         });
     }
     public void getDataFromMainActivity(){
         totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
         addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-        mImagePath = getIntent().getStringExtra("ImagePath");
         byte[] byteArray = getIntent().getByteArrayExtra("image");
+        int byteArraySize = getIntent().getIntExtra("ByteArraySize", 1);
+        Bitmap temp;
+        for(int i = 0; i < byteArraySize; i++) {
+            byte[] tempByteArray = getIntent().getByteArrayExtra("icon" + Integer.toString(i));
+            temp = BitmapFactory.decodeByteArray(tempByteArray, 0, tempByteArray.length);
+            iconBitmaps.add(temp);
+        }
         bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
     }
     public void showListView(){
@@ -136,6 +143,7 @@ public class SendActivity extends AppCompatActivity {
         for(int i = 0; i < addrBookSize; i++){
             addrBookFace[i] = new Face();
         }
+
         saveUserLandmark(face, totalLandmarks, totalSize); //현재 사진 속 인물의 랜드마크 저장
         saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
         for(int i = 0; i < totalSize; i++){

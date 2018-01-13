@@ -18,6 +18,7 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -57,10 +58,13 @@ import timber.log.Timber;
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_CODE_PERMISSION = 2;
+    final private int ICON_IMAGE_WIDTH = 128;
+    final private int ICON_IMAGE_HEIGHT = 128;
     private Bitmap bm;
     private static final String TAG = "MainActivity";
     private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
+    private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -154,8 +158,12 @@ public class MainActivity extends AppCompatActivity {
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
         sendIntent.putStringArrayListExtra("AddrBookLandmarks", testLandmarks);
-        sendIntent.putExtra("ImagePath", mTestImgPath);
         sendIntent.putExtra("image", byteArray);
+        int iconByteArraySize = iconByteArrayList.size();
+        sendIntent.putExtra("ByteArraySize", iconByteArraySize);
+        for(int i = 0; i < iconByteArraySize; i++) {
+            sendIntent.putExtra("icon"+Integer.toString(i), iconByteArrayList.get(i));
+        }
         startActivity(sendIntent);
         finish();
     }
@@ -361,17 +369,26 @@ public class MainActivity extends AppCompatActivity {
         paint.setStrokeWidth(2);
         paint.setStyle(Paint.Style.STROKE);
         // Loop result list
+        Bitmap icon;
         for (VisionDetRet ret : results) {
             Rect bounds = new Rect();
             bounds.left = (int) (ret.getLeft() * resizeRatio);
             bounds.top = (int) (ret.getTop() * resizeRatio);
             bounds.right = (int) (ret.getRight() * resizeRatio);
             bounds.bottom = (int) (ret.getBottom() * resizeRatio);
+            icon = Bitmap.createBitmap(bm, bounds.left, bounds.top, bounds.right - bounds.left, bounds.bottom - bounds.top);
+            icon = getResizedBitmap(icon, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT); //icon으로 재생성
+
+            //비트맵인 icon을 byyeArray로 변환후 저장
+            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+            icon.compress(Bitmap.CompressFormat.PNG, 100, bStream);
+            byte[] byteArray = bStream.toByteArray();
+            iconByteArrayList.add(byteArray);
+
             //canvas.drawRect(bounds, paint); //얼굴 사각형 그리기
             // Get landmark
             ArrayList<Point> landmarks = ret.getFaceLandmarks();
-            String tempLandmark = new String();
-            tempLandmark = "";
+            String tempLandmark = "";
             int index = 0;
             for (Point point : landmarks) {
                 int pointX = (int) (point.x * resizeRatio);
@@ -391,5 +408,11 @@ public class MainActivity extends AppCompatActivity {
     protected Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
         Bitmap resizedBitmap = Bitmap.createScaledBitmap(bm, newWidth, newHeight, true);
         return resizedBitmap;
+    }
+
+    public byte[] convertBitmapToByteArray(Bitmap bitmp){
+        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
+        bitmp.compress(Bitmap.CompressFormat.PNG, 100, bStream);
+        return bStream.toByteArray();
     }
 }
