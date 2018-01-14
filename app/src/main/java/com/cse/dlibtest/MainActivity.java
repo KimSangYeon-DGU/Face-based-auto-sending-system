@@ -222,6 +222,7 @@ public class MainActivity extends AppCompatActivity {
         String testLandmark = "";
         for(int i = 0 ; i < path.length; i++) {
             testLandmark = extractAddressBookLandmarks(path[i]);
+            Log.d("Report", Integer.toString(i)+": "+testLandmark);
             testLandmarks.add(testLandmark);
         }
         Log.d("Landmark", testLandmark);
@@ -229,7 +230,7 @@ public class MainActivity extends AppCompatActivity {
     //랜드마크 추출
     protected String extractAddressBookLandmarks(int id){
         FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), id);
         List<VisionDetRet> results = fDet.detect(bitmap);
         String tempTestLandmarks = "";
         for (final VisionDetRet ret : results) {
