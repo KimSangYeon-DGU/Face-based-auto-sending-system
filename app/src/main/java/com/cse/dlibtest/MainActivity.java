@@ -65,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
     private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
+    private int[] path = new int[100];
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -100,14 +101,123 @@ public class MainActivity extends AppCompatActivity {
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             verifyPermissions(this);
         }
-        callVirtualAddressBook();
+        extractTestDataLandmarks();
+    }
+    public void setDrawableImage(){
+        path[0] = R.drawable.s1;
+        path[1] = R.drawable.s2;
+        path[2] = R.drawable.s3;
+        path[3] = R.drawable.s4;
+        path[4] = R.drawable.s5;
+        path[5] = R.drawable.s6;
+        path[6] = R.drawable.s7;
+        path[7] = R.drawable.s8;
+        path[8] = R.drawable.s9;
+        path[9] = R.drawable.s10;
+
+        path[10] = R.drawable.s11;
+        path[11] = R.drawable.s12;
+        path[12] = R.drawable.s13;
+        path[13] = R.drawable.s14;
+        path[14] = R.drawable.s15;
+        path[15] = R.drawable.s16;
+        path[16] = R.drawable.s17;
+        path[17] = R.drawable.s18;
+        path[18] = R.drawable.s19;
+        path[19] = R.drawable.s20;
+
+        path[20] = R.drawable.s21;
+        path[21] = R.drawable.s22;
+        path[22] = R.drawable.s23;
+        path[23] = R.drawable.s24;
+        path[24] = R.drawable.s25;
+        path[25] = R.drawable.s26;
+        path[26] = R.drawable.s27;
+        path[27] = R.drawable.s28;
+        path[28] = R.drawable.s29;
+        path[29] = R.drawable.s30;
+
+        path[30] = R.drawable.s31;
+        path[31] = R.drawable.s32;
+        path[32] = R.drawable.s33;
+        path[33] = R.drawable.s34;
+        path[34] = R.drawable.s35;
+        path[35] = R.drawable.s36;
+        path[36] = R.drawable.s37;
+        path[37] = R.drawable.s38;
+        path[38] = R.drawable.s39;
+        path[39] = R.drawable.s40;
+
+        path[40] = R.drawable.s41;
+        path[41] = R.drawable.s42;
+        path[42] = R.drawable.s43;
+        path[43] = R.drawable.s44;
+        path[44] = R.drawable.s45;
+        path[45] = R.drawable.s46;
+        path[46] = R.drawable.s47;
+        path[47] = R.drawable.s48;
+        path[48] = R.drawable.s49;
+        path[49] = R.drawable.s50;
+
+        path[50] = R.drawable.s51;
+        path[51] = R.drawable.s52;
+        path[52] = R.drawable.s53;
+        path[53] = R.drawable.s54;
+        path[54] = R.drawable.s55;
+        path[55] = R.drawable.s56;
+        path[56] = R.drawable.s57;
+        path[57] = R.drawable.s58;
+        path[58] = R.drawable.s59;
+        path[59] = R.drawable.s60;
+
+        path[60] = R.drawable.s61;
+        path[61] = R.drawable.s62;
+        path[62] = R.drawable.s63;
+        path[63] = R.drawable.s64;
+        path[64] = R.drawable.s65;
+        path[65] = R.drawable.s66;
+        path[66] = R.drawable.s67;
+        path[67] = R.drawable.s68;
+        path[68] = R.drawable.s69;
+        path[69] = R.drawable.s70;
+
+        path[70] = R.drawable.s71;
+        path[71] = R.drawable.s72;
+        path[72] = R.drawable.s73;
+        path[73] = R.drawable.s74;
+        path[74] = R.drawable.s75;
+        path[75] = R.drawable.s76;
+        path[76] = R.drawable.s77;
+        path[77] = R.drawable.s78;
+        path[78] = R.drawable.s79;
+        path[79] = R.drawable.s80;
+
+        path[80] = R.drawable.s81;
+        path[81] = R.drawable.s82;
+        path[82] = R.drawable.s83;
+        path[83] = R.drawable.s84;
+        path[84] = R.drawable.s85;
+        path[85] = R.drawable.s86;
+        path[86] = R.drawable.s87;
+        path[87] = R.drawable.s88;
+        path[88] = R.drawable.s89;
+        path[89] = R.drawable.s90;
+
+        path[90] = R.drawable.s91;
+        path[91] = R.drawable.s92;
+        path[92] = R.drawable.s93;
+        path[93] = R.drawable.s94;
+        path[94] = R.drawable.s95;
+        path[95] = R.drawable.s96;
+        path[96] = R.drawable.s97;
+        path[97] = R.drawable.s98;
+        path[98] = R.drawable.s99;
+        path[99] = R.drawable.s100;
+
     }
     //가상 주소록 이미지 불러오기
-    protected void callVirtualAddressBook(){
-        int[] path = new int[3];
-        path[0] = R.drawable.kim;
-        path[1] = R.drawable.na;
-        path[2] = R.drawable.kang;
+    protected void extractTestDataLandmarks(){
+        setDrawableImage();
 
         String testLandmark = "";
         for(int i = 0 ; i < path.length; i++) {
@@ -116,10 +226,10 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.d("Landmark", testLandmark);
     }
-    //주소록 랜드마크 추출
+    //랜드마크 추출
     protected String extractAddressBookLandmarks(int id){
         FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), id);
+        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
         List<VisionDetRet> results = fDet.detect(bitmap);
         String tempTestLandmarks = "";
         for (final VisionDetRet ret : results) {
