@@ -1,10 +1,7 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.model;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
-
-import java.io.ByteArrayOutputStream;
-import java.io.Serializable;
 
 /**
  * Created by sy081 on 2018-01-04.

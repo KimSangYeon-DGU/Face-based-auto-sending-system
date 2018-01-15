@@ -1,4 +1,4 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.model;
 
 import android.graphics.Bitmap;
 

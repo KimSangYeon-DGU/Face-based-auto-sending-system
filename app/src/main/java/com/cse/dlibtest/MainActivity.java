@@ -5,12 +5,10 @@
 package com.cse.dlibtest;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -20,31 +18,29 @@ import android.graphics.Paint;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Icon;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.cse.dlibtest.model.AddressBook;
+import com.cse.dlibtest.adapter.ContactsAdapter;
+import com.cse.dlibtest.model.Face;
+import com.cse.dlibtest.ui.SendActivity;
+import com.cse.dlibtest.util.FileUtils;
 import com.dexafree.materialList.card.Card;
 import com.dexafree.materialList.card.provider.BigImageCardProvider;
 import com.dexafree.materialList.view.MaterialListView;
 import com.cse.dlib.Constants;
 import com.cse.dlib.FaceDet;
 import com.cse.dlib.VisionDetRet;
-import com.gun0912.tedpermission.PermissionListener;
-import com.gun0912.tedpermission.TedPermission;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -63,10 +59,14 @@ import java.util.List;
 import hugo.weaving.DebugLog;
 import timber.log.Timber;
 
+import static com.cse.dlibtest.util.Util.extractAddressBookLandmarks;
+import static com.cse.dlibtest.util.Util.getResizedBitmap;
+
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity {
     private static final int RESULT_LOAD_IMG = 1;
     private static final int REQUEST_CODE_PERMISSION = 2;
+    private static final int PICK_PHONE_DATA = 3;
     final private int ICON_IMAGE_WIDTH = 128;
     final private int ICON_IMAGE_HEIGHT = 128;
     private Bitmap bm;
@@ -75,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
     private ArrayList<Face> faces = new ArrayList<>();
-
 
     private ContactsAdapter mAdapter;
     // Storage Permissions
@@ -95,6 +94,8 @@ public class MainActivity extends AppCompatActivity {
     protected FloatingActionButton mFabActionBt;
     @ViewById(R.id.fab_process)
     protected FloatingActionButton mFabProcessActionBt;
+    @ViewById(R.id.fab_insert)
+    protected FloatingActionButton mFabInsertActionBt;
 
     FaceDet mFaceDet;
 
@@ -110,28 +111,15 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Just use hugo to print log
-        isExternalStorageWritable();
-        isExternalStorageReadable();
-          mListView = (MaterialListView) findViewById(R.id.material_listview);
-        //LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
-       // mAddressView = (RecyclerView)findViewById(R.id.rv_contacts);
-        //mAddressView.setLayoutManager(linearLayoutManager);
+        mListView = (MaterialListView) findViewById(R.id.material_listview);
         mAdapter = new ContactsAdapter(this, addressBooks);
         init();
-
-
-
-        Bitmap insertImage = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
-        insertUser("김상연", "01079405173", insertImage);
-        if(!deleteUser(1)){
-            Log.d("ERROR", "연락처를 지울 수 없습니다.");
-        }
     }
     public void insertUser(String name, String phoneNumber, Bitmap image){
         int size = addressBooks.size();
         Bitmap icon = getResizedBitmap(image, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT);
-        addressBooks.add(new AddressBook(size+1, name, phoneNumber, icon));
+        addressBooks.add(new AddressBook(size+1, name, phoneNumber, image, icon,""));
+        mAdapter.notifyDataSetChanged();
     }
     public boolean deleteUser(int id){
         try{
@@ -144,88 +132,46 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void init(){
-        // For API 23+ you need to request the read/write permissions even if they are already in your manifest.
-        int currentapiVersion = android.os.Build.VERSION.SDK_INT;
+        Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, field, null,
+                null, ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
 
-        if (currentapiVersion >= Build.VERSION_CODES.M) {
-            verifyPermissions(this);
-        }
+        ContentResolver cr = getContentResolver();
+        InputStream input = null;
 
-        //tedpermission
-        PermissionListener permissionlistener = new PermissionListener() {
-            @Override
-            public void onPermissionGranted() {
-                Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+        int idx = 1;
+        //한 행씩 이동
+        while(c.moveToNext()) {
+            //연락처 ID이 여기 위치
+            String number = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+            //연락처 대표 이름이 여기 위치
+            String name = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
 
-                Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, field, null,
-                        null, ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
+            int contactId_idx = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
+            Long contactId = c.getLong(contactId_idx);
 
-                ContentResolver cr = getContentResolver();
-                InputStream input = null;
+            Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
 
-                int idx = 1;
-                //한 행씩 이동
-                while(c.moveToNext()) {
-                    HashMap<String,String> map = new HashMap<String,String>();
-                    //연락처 ID이 여기 위치
-                    String number = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-                    //연락처 대표 이름이 여기 위치
-                    String name = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
-                    map.put("name", name);
+            input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
+            Bitmap contactPhoto = BitmapFactory.decodeStream(input);
+            //contactPhoto is NULL...... should fix
 
-                    int contactId_idx = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
-                    Long contactId = c.getLong(contactId_idx);
-
-                    Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
-
-                    input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
-                    Bitmap contactPhoto = BitmapFactory.decodeStream(input);
-                    //contactPhoto is NULL...... should fix
-
-                    if(input != null) {
-                        String tempLandmark = extractAddressBookLandmarks(contactPhoto);
-                        AddressBook addressBook = new AddressBook(idx++, name, number, getResizedBitmap(contactPhoto, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT), tempLandmark);
-                        addressBooks.add(addressBook);
-                        mAdapter.notifyDataSetChanged();
-                    }
-                }
-            }
-            @Override
-            public void onPermissionDenied(ArrayList<String> deniedPermissions) {
-                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
-
-            }
-        };
-        new TedPermission(this)
-                .setPermissionListener(permissionlistener)
-                .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
-                .setPermissions(Manifest.permission.READ_CONTACTS, Manifest.permission.READ_SMS,Manifest.permission.SEND_SMS,Manifest.permission.READ_PHONE_STATE)
-                .check();
-    }
-
-    //주소록 랜드마크 추출
-    protected String extractAddressBookLandmarks(Bitmap bitmap){
-        FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
-        List<VisionDetRet> results = fDet.detect(bitmap);
-        String tempTestLandmarks = "";
-        for (final VisionDetRet ret : results) {
-            // Get 68 landmark points
-            ArrayList<Point> landmarks = ret.getFaceLandmarks();
-            for (Point point : landmarks) {
-                int pointX = point.x;
-                int pointY = point.y;
-                tempTestLandmarks += Integer.toString(pointX);
-                tempTestLandmarks += ",";
-                tempTestLandmarks += Integer.toString(pointY);
-                tempTestLandmarks += ",";
+            if(input != null) {
+                Bitmap icon = getResizedBitmap(contactPhoto, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT);
+                addressBooks.add(new AddressBook(idx++, name, number, contactPhoto, icon, ""));
             }
         }
-        return tempTestLandmarks;
+        mAdapter.swapData(addressBooks);
     }
 
     @AfterViews
     protected void setupUI() {
         Toast.makeText(MainActivity.this, getString(R.string.description_info), Toast.LENGTH_LONG).show();
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+
+        mAddressView.setHasFixedSize(true);
+        mAddressView.setLayoutManager(linearLayoutManager);
+
+        mAddressView.setAdapter(mAdapter);
     }
 
     @Click({R.id.fab})
@@ -237,74 +183,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Click({R.id.fab_process}) //process button
     protected void searchPeople() {
-        Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
-        sendIntent.putExtra("FaceSize", faces.size());
-        for(int i = 0; i < faces.size(); i++) {
-            sendIntent.putExtra("FaceLandmarks"+Integer.toString(i), faces.get(i).getStrLandmark());//사진 속 얼굴 랜드마크 전송
-            sendIntent.putExtra("FaceIcon"+Integer.toString(i), convertBitmapToByteArray(faces.get(i).getIcon())); //사진 속 얼굴 아이콘 전송
-        }
-
-        sendIntent.putExtra("AddrBookSize", addressBooks.size());
-        for(int i = 0; i < addressBooks.size(); i++) {
-            sendIntent.putExtra("AddrBookID"+Integer.toString(i), Integer.toString(addressBooks.get(i).getId()));
-            sendIntent.putExtra("AddrBookName"+Integer.toString(i), addressBooks.get(i).getName());
-            sendIntent.putExtra("AddrBookPhoneNumber"+Integer.toString(i), addressBooks.get(i).getPhoneNumber());
-            sendIntent.putExtra("AddrBookLandmark"+Integer.toString(i), addressBooks.get(i).getFace().getStrLandmark());
-            sendIntent.putExtra("AddrBookIcon"+Integer.toString(i), convertBitmapToByteArray(addressBooks.get(i).getFace().getIcon())); //사진 속 얼굴 아이콘 전송
-        }
-
-        sendIntent.putExtra("Image", convertBitmapToByteArray(bm)); //사용자가 선택한 사진 전송
-        startActivity(sendIntent);
-        finish();
+        runExtractAsync();
     }
 
-    /**
-     * Checks if the app has permission to write to device storage or open camera
-     * If the app does not has permission then the user will be prompted to grant permissions
-     *
-     * @param activity
-     */
-    @DebugLog
-    private static boolean verifyPermissions(Activity activity) {
-        // Check if we have write permission
-        int write_permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int read_persmission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
-        int camera_permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.CAMERA);
-
-        if (write_permission != PackageManager.PERMISSION_GRANTED ||
-                read_persmission != PackageManager.PERMISSION_GRANTED ||
-                camera_permission != PackageManager.PERMISSION_GRANTED) {
-            // We don't have permission so prompt the user
-            ActivityCompat.requestPermissions(
-                    activity,
-                    PERMISSIONS_REQ,
-                    REQUEST_CODE_PERMISSION
-            );
-            return false;
-        } else {
-            return true;
-        }
-    }
-
-    /* Checks if external storage is available for read and write */
-    @DebugLog
-    private boolean isExternalStorageWritable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state)) {
-            return true;
-        }
-        return false;
-    }
-
-    /* Checks if external storage is available to at least read */
-    @DebugLog
-    private boolean isExternalStorageReadable() {
-        String state = Environment.getExternalStorageState();
-        if (Environment.MEDIA_MOUNTED.equals(state) ||
-                Environment.MEDIA_MOUNTED_READ_ONLY.equals(state)) {
-            return true;
-        }
-        return false;
+    @Click({R.id.fab_insert})
+    protected void launchAddressList(){
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setData(ContactsContract.CommonDataKinds.Phone.CONTENT_URI);
+        startActivityForResult(intent, PICK_PHONE_DATA);
     }
 
     @DebugLog
@@ -318,14 +204,6 @@ public class MainActivity extends AppCompatActivity {
             // Create intent to Open Image applications like Gallery, Google Photos
             Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
             startActivityForResult(galleryIntent, RESULT_LOAD_IMG);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQUEST_CODE_PERMISSION) {
-            Toast.makeText(MainActivity.this, "Demo using static images", Toast.LENGTH_SHORT).show();
-            demoStaticImage();
         }
     }
 
@@ -348,7 +226,30 @@ public class MainActivity extends AppCompatActivity {
                     runDetectAsync(mTestImgPath);
                     Toast.makeText(this, "Img Path:" + mTestImgPath, Toast.LENGTH_SHORT).show();
                 }
-            } else {
+            } else if(resultCode == RESULT_OK)
+            {
+                switch (requestCode){
+                    case PICK_PHONE_DATA:
+                        Cursor cursor = getContentResolver().query(data.getData(),
+                                new String[]{ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                                        ContactsContract.CommonDataKinds.Phone.NUMBER,
+                                        ContactsContract.CommonDataKinds.Phone.PHOTO_URI}, null, null, null);
+                        cursor.moveToFirst();
+                        String name = cursor.getString(0);     //0은 이름을 얻어온다.
+                        String phone = cursor.getString(1);   //1은 번호를 받아온다.
+                        String image_uri = cursor.getString(2);
+                        if(image_uri != null) {
+                            Bitmap contactPhoto = MediaStore.Images.Media.getBitmap(getContentResolver(), Uri.parse(image_uri));
+                            cursor.close();
+                            insertUser(name, phone, contactPhoto);
+                        } else{
+                            Toast.makeText(this, "Cannot add the contact, Because the photo do not exist", Toast.LENGTH_LONG).show();
+                        }
+                        break;
+                    default:
+                }
+            }
+            else {
                 Toast.makeText(this, "You haven't picked Image", Toast.LENGTH_LONG).show();
             }
         } catch (Exception e) {
@@ -359,8 +260,7 @@ public class MainActivity extends AppCompatActivity {
     // ==========================================================
     // Tasks inner class
     // ==========================================================
-    private ProgressDialog mDialog;
-
+    private ProgressDialog mDialog, mExtractDialog;
     @Background
     @NonNull
     protected void runDetectAsync(@NonNull String imgPath) {
@@ -388,7 +288,6 @@ public class MainActivity extends AppCompatActivity {
             Card card = new Card.Builder(MainActivity.this)
                     .withProvider(BigImageCardProvider.class)
                     .setDrawable(drawRect(imgPath, faceList, Color.GREEN))
-                    .setTitle("Face det")
                     .endConfig()
                     .build();
             cardrets.add(card);
@@ -404,6 +303,16 @@ public class MainActivity extends AppCompatActivity {
         dismissDialog();
     }
 
+    @Background
+    protected  void runExtractAsync(){
+        showExtractDialog();
+        int AdrressBookSize = addressBooks.size();
+        for(int i = 0; i < AdrressBookSize; i++){
+            String extractedLandmark = extractAddressBookLandmarks(addressBooks.get(i).getFace().getImage());
+            addressBooks.get(i).getFace().setStrLandmark(extractedLandmark);
+        }
+        dismissExtractDialog();
+    }
     @UiThread
     protected void addCardListView(List<Card> cardrets) {
         for (Card each : cardrets) {
@@ -413,13 +322,44 @@ public class MainActivity extends AppCompatActivity {
 
     @UiThread
     protected void showDiaglog() {
-        mDialog = ProgressDialog.show(MainActivity.this, "Wait", "Face detection", true);
+        mDialog = ProgressDialog.show(MainActivity.this, "Wait", "Detecting faces", true);
     }
 
     @UiThread
     protected void dismissDialog() {
         if (mDialog != null) {
             mDialog.dismiss();
+        }
+    }
+
+    @UiThread
+    protected void showExtractDialog(){
+        mExtractDialog = ProgressDialog.show(MainActivity.this, "Wait", "Extracting Landmarks", true);
+    }
+
+    @UiThread
+    protected void dismissExtractDialog(){
+        if(mExtractDialog != null){
+            Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
+            sendIntent.putExtra("FaceSize", faces.size());
+            for(int i = 0; i < faces.size(); i++) {
+                sendIntent.putExtra("FaceLandmarks"+Integer.toString(i), faces.get(i).getStrLandmark());//사진 속 얼굴 랜드마크 전송
+                sendIntent.putExtra("FaceIcon"+Integer.toString(i), convertBitmapToByteArray(faces.get(i).getIcon())); //사진 속 얼굴 아이콘 전송
+            }
+
+            sendIntent.putExtra("AddrBookSize", addressBooks.size());
+            for(int i = 0; i < addressBooks.size(); i++) {
+                sendIntent.putExtra("AddrBookID"+Integer.toString(i), Integer.toString(addressBooks.get(i).getId()));
+                sendIntent.putExtra("AddrBookName"+Integer.toString(i), addressBooks.get(i).getName());
+                sendIntent.putExtra("AddrBookPhoneNumber"+Integer.toString(i), addressBooks.get(i).getPhoneNumber());
+                sendIntent.putExtra("AddrBookLandmark"+Integer.toString(i), addressBooks.get(i).getFace().getStrLandmark());
+                sendIntent.putExtra("AddrBookImage"+Integer.toString(i), convertBitmapToByteArray(getResizedBitmap(addressBooks.get(i).getFace().getImage(),ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT))); //사진 속 얼굴 아이콘 전송
+            }
+
+            sendIntent.putExtra("Image", convertBitmapToByteArray(bm)); //사용자가 선택한 사진 전송
+            startActivity(sendIntent);
+            finish();
+            mExtractDialog.dismiss();
         }
     }
 
@@ -476,18 +416,8 @@ public class MainActivity extends AppCompatActivity {
             if(y < 0) y = 0;
             if(exWidth > bm.getWidth()) exWidth = bm.getWidth();
             if(exHeight > bm.getHeight()) exHeight = bm.getHeight();
-
             icon = Bitmap.createBitmap(bm, x, y, exWidth, exHeight);
             icon = getResizedBitmap(icon, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT); //icon으로 재생성
-
-            //비트맵인 icon을 byyeArray로 변환후 저장
-            /*
-            ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-            icon.compress(Bitmap.CompressFormat.PNG, 100, bStream);
-            byte[] byteArray = bStream.toByteArray();
-            iconByteArrayList.add(byteArray);
-            */
-
             //canvas.drawRect(bounds, paint); //얼굴 사각형 그리기
             // Get landmark
             ArrayList<Point> landmarks = ret.getFaceLandmarks();
@@ -509,11 +439,6 @@ public class MainActivity extends AppCompatActivity {
         return new BitmapDrawable(getResources(), bm);
     }
 
-    @DebugLog
-    protected Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bm, newWidth, newHeight, true);
-        return resizedBitmap;
-    }
 
     public byte[] convertBitmapToByteArray(Bitmap bitmp){
         ByteArrayOutputStream bStream = new ByteArrayOutputStream();

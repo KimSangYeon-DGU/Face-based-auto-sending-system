@@ -7,7 +7,7 @@ android {
     defaultConfig {
         applicationId "com.cse.dlibtest"
         minSdkVersion 19
-        targetSdkVersion  rootProject.ext.androidCompileSdkVersion
+        targetSdkVersion rootProject.ext.androidCompileSdkVersion
         versionCode 1
         versionName "${rootProject.ext.releaseVersionName}"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -46,10 +46,11 @@ dependencies {
     compile 'com.github.dexafree:materiallist:3.0.1'
     compile 'com.jakewharton.timber:timber:4.5.1'
     compile project(':dlib')
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
     apt "org.androidannotations:androidannotations:$AAVersion"
     compile "org.androidannotations:androidannotations-api:$AAVersion"
     //ted
-    compile 'com.github.ParkSangGwon:TedPermission:v1.0.11'
+    compile 'gun0912.ted:tedpermission:2.1.0'
 
     // Add AndroidJUnit
     androidTestCompile "com.android.support:support-annotations:${rootProject.ext.androidSupportSdkVersion}"

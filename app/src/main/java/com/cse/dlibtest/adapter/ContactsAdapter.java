@@ -1,12 +1,18 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.adapter;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.provider.Telephony;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.cse.dlibtest.model.AddressBook;
+import com.cse.dlibtest.R;
 
 import java.util.ArrayList;
 
@@ -20,6 +26,10 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
     public ContactsAdapter(Context context, ArrayList<AddressBook> result){
         mContext = context;
         mAddressLists = result;
+    }
+    public void swapData(ArrayList<AddressBook> addressLists){
+        mAddressLists = addressLists;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -41,16 +51,42 @@ public class ContactsAdapter extends RecyclerView.Adapter<ContactsAdapter.Contac
     }
 
 
-    public class ContactsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
+    public class ContactsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener{
         TextView mName;
         ImageView mPhoto;
-
 
         public ContactsViewHolder(View itemView){
             super(itemView);
             mName = (TextView)itemView.findViewById(R.id.tv_name);
             mPhoto = (ImageView)itemView.findViewById(R.id.iv_photo);
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
+
+            builder .setMessage(R.string.del_contact)
+                    .setPositiveButton(R.string.confirm, new DialogInterface.OnClickListener(){
+                        // 확인 버튼 클릭시 설정
+                        public void onClick(DialogInterface dialog, int whichButton){
+                            int position = getAdapterPosition();
+                            mAddressLists.remove(position);
+                            notifyDataSetChanged();
+                        }
+                    })
+                    .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener(){
+                        // 취소 버튼 클릭시 설정
+                        public void onClick(DialogInterface dialog, int whichButton){
+                            dialog.cancel();
+                        }
+                    });
+
+            AlertDialog dialog = builder.create();    // 알림창 객체 생성
+            dialog.show();
+
+            return true;
         }
 
         @Override

@@ -1,6 +1,6 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.util;
 
-import android.graphics.Point;
+import com.cse.dlibtest.model.Face;
 
 /**
  * Created by sy081 on 2018-01-04.

@@ -1,4 +1,4 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.ui;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -14,7 +14,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.cse.dlibtest.MainActivity;
+import com.cse.dlibtest.MainActivity_;
+import com.cse.dlibtest.model.AddressBook;
+import com.cse.dlibtest.model.Face;
+import com.cse.dlibtest.util.LandmarkComparator;
+import com.cse.dlibtest.adapter.ListViewAdapter;
+import com.cse.dlibtest.model.ListViewItem;
+import com.cse.dlibtest.model.Prediction;
+import com.cse.dlibtest.R;
+
 import java.util.ArrayList;
+
+import static com.cse.dlibtest.util.Util.getResizedBitmap;
 
 /**
  * Created by sy081 on 2018-01-03.
@@ -28,11 +40,6 @@ public class SendActivity extends AppCompatActivity {
     private ArrayList<Prediction> candidate = new ArrayList<>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
     private ArrayList<Face> faces = new ArrayList<>();
-    /*
-    private ArrayList<String> faceLandmarks;
-    private ArrayList<String> addrBookLandmarks;
-    private ArrayList<Bitmap> iconBitmaps = new ArrayList<Bitmap>();
-    */
     private Bitmap bmp;
 
     private ListView listview ;
@@ -57,6 +64,7 @@ public class SendActivity extends AppCompatActivity {
                 moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //액티비티간 이동중에 스택 중간에 저장되어있는 액티비티를 지움
                 moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //띄우려는 액티비티가 스택 맨위에 이미 실행 중이면 재사용함.
                 startActivity(moveToMainIntent); //Activity 시작
+                finish();
             }
         });
 
@@ -70,7 +78,7 @@ public class SendActivity extends AppCompatActivity {
                 boolean isThere = false;
                 String phoneNumber = "";
                 for(int i =  0; i < count; i++){
-                    ListViewItem lv = new ListViewItem();
+                    ListViewItem lv;
                     if(checkedItems.get(i)) {
                         lv = (ListViewItem) adapter.getItem(i);
                         if (!isThere) {
@@ -106,9 +114,10 @@ public class SendActivity extends AppCompatActivity {
             String tempAddrBookName = getIntent().getStringExtra("AddrBookName"+Integer.toString(i));
             String tempAddrBookPhoneNumber = getIntent().getStringExtra("AddrBookPhoneNumber"+Integer.toString(i));
             String tempAddrBookLandmark = getIntent().getStringExtra("AddrBookLandmark"+Integer.toString(i));
-            byte[] tempAddrBookByteArray = getIntent().getByteArrayExtra("AddrBookIcon"+Integer.toString(i));
-            Bitmap icon  = BitmapFactory.decodeByteArray(tempAddrBookByteArray, 0, tempAddrBookByteArray.length);//주소록 비트맵으로 변환 후 bmp에 저장
-            AddressBook addressBook = new AddressBook(tempAddrBookId, tempAddrBookName, tempAddrBookPhoneNumber,icon,tempAddrBookLandmark);
+            byte[] tempAddrBookByteArray = getIntent().getByteArrayExtra("AddrBookImage"+Integer.toString(i));
+            Bitmap image  = BitmapFactory.decodeByteArray(tempAddrBookByteArray, 0, tempAddrBookByteArray.length);//주소록 비트맵으로 변환 후 bmp에 저장
+            Bitmap icon = getResizedBitmap(image, ICON_IMAGE_WIDTH, ICON_IMAGE_WIDTH);
+            AddressBook addressBook = new AddressBook(tempAddrBookId, tempAddrBookName, tempAddrBookPhoneNumber, image, icon,tempAddrBookLandmark);
             addressBooks.add(addressBook);
         }
         byte[] byteArray = getIntent().getByteArrayExtra("Image"); //사용자 선택 사진 수신
