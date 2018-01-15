@@ -7,6 +7,8 @@ package com.cse.dlibtest;
 import android.Manifest;
 import android.app.Activity;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -23,6 +25,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -38,6 +41,8 @@ import com.dexafree.materialList.view.MaterialListView;
 import com.cse.dlib.Constants;
 import com.cse.dlib.FaceDet;
 import com.cse.dlib.VisionDetRet;
+import com.gun0912.tedpermission.PermissionListener;
+import com.gun0912.tedpermission.TedPermission;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -48,7 +53,9 @@ import org.androidannotations.annotations.ViewById;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import hugo.weaving.DebugLog;
@@ -62,9 +69,11 @@ public class MainActivity extends AppCompatActivity {
     final private int ICON_IMAGE_HEIGHT = 128;
     private Bitmap bm;
     private static final String TAG = "MainActivity";
-    private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
+    //private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
     private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
+    private ArrayList<AddressBook> addressBooks = new ArrayList<>();
+    private ArrayList<Face> faces = new ArrayList<>();
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -82,8 +91,16 @@ public class MainActivity extends AppCompatActivity {
     protected FloatingActionButton mFabProcessActionBt;
     @ViewById(R.id.toolbar)
     protected Toolbar mToolbar;
-
     FaceDet mFaceDet;
+
+    //CONTACTS DATA SET
+    static final String[] field = new String[] {
+            ContactsContract.CommonDataKinds.Phone._ID,
+            ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+            ContactsContract.CommonDataKinds.Phone.NUMBER,
+            ContactsContract.CommonDataKinds.Phone.PHOTO_ID,
+            ContactsContract.CommonDataKinds.Phone.CONTACT_ID
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,26 +117,64 @@ public class MainActivity extends AppCompatActivity {
         if (currentapiVersion >= Build.VERSION_CODES.M) {
             verifyPermissions(this);
         }
-        callVirtualAddressBook();
-    }
-    //가상 주소록 이미지 불러오기
-    protected void callVirtualAddressBook(){
-        int[] path = new int[3];
-        path[0] = R.drawable.kim;
-        path[1] = R.drawable.na;
-        path[2] = R.drawable.kang;
 
-        String testLandmark = "";
-        for(int i = 0 ; i < path.length; i++) {
-            testLandmark = extractAddressBookLandmarks(path[i]);
-            testLandmarks.add(testLandmark);
-        }
-        Log.d("Landmark", testLandmark);
+        //tedpermission
+        PermissionListener permissionlistener = new PermissionListener() {
+            @Override
+            public void onPermissionGranted() {
+                Toast.makeText(MainActivity.this, "Permission Granted", Toast.LENGTH_SHORT).show();
+
+                Cursor c = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, field, null,
+                        null, ContactsContract.Contacts.DISPLAY_NAME + " COLLATE LOCALIZED ASC");
+
+                ContentResolver cr = getContentResolver();
+                InputStream input = null;
+
+                int idx = 1;
+                //한 행씩 이동
+                while(c.moveToNext()) {
+                    HashMap<String,String> map = new HashMap<String,String>();
+                    //연락처 ID이 여기 위치
+                    String number = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    //연락처 대표 이름이 여기 위치
+                    String name = c.getString(c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    map.put("name", name);
+
+                    int contactId_idx = c.getColumnIndex(ContactsContract.CommonDataKinds.Phone.CONTACT_ID);
+                    Long contactId = c.getLong(contactId_idx);
+
+                    Uri uri = ContentUris.withAppendedId(ContactsContract.Contacts.CONTENT_URI, contactId);
+
+                    input = ContactsContract.Contacts.openContactPhotoInputStream(cr, uri);
+                    Bitmap contactPhoto = BitmapFactory.decodeStream(input);
+                    //contactPhoto is NULL...... should fix
+
+                    if(input != null) {
+                        String tempLandmark = extractAddressBookLandmarks(contactPhoto);
+                        AddressBook addressBook = new AddressBook(idx++, name, number, getResizedBitmap(contactPhoto, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT), tempLandmark);
+                        addressBooks.add(addressBook);
+                    }
+                }
+            }
+
+            @Override
+            public void onPermissionDenied(ArrayList<String> deniedPermissions) {
+                Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
+
+            }
+        };
+
+        new TedPermission(this)
+                .setPermissionListener(permissionlistener)
+                .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
+                .setPermissions(Manifest.permission.READ_CONTACTS, Manifest.permission.READ_SMS,Manifest.permission.SEND_SMS,Manifest.permission.READ_PHONE_STATE)
+                .check();
+
     }
+
     //주소록 랜드마크 추출
-    protected String extractAddressBookLandmarks(int id){
+    protected String extractAddressBookLandmarks(Bitmap bitmap){
         FaceDet fDet = new FaceDet(Constants.getFaceShapeModelPath());
-        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), id);
         List<VisionDetRet> results = fDet.detect(bitmap);
         String tempTestLandmarks = "";
         for (final VisionDetRet ret : results) {
@@ -137,6 +192,7 @@ public class MainActivity extends AppCompatActivity {
         return tempTestLandmarks;
     }
 
+
     @AfterViews
     protected void setupUI() {
         mToolbar.setTitle(getString(R.string.app_name));
@@ -152,18 +208,28 @@ public class MainActivity extends AppCompatActivity {
 
     @Click({R.id.fab_process}) //process button
     protected void searchPeople() {
+        /*
         ByteArrayOutputStream bStream = new ByteArrayOutputStream();
         bm.compress(Bitmap.CompressFormat.PNG, 100, bStream);
         byte[] byteArray = bStream.toByteArray();
+        */
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
-        sendIntent.putStringArrayListExtra("TotalLandmarks", totalLandmarks);
-        sendIntent.putStringArrayListExtra("AddrBookLandmarks", testLandmarks);
-        sendIntent.putExtra("image", byteArray);
-        int iconByteArraySize = iconByteArrayList.size();
-        sendIntent.putExtra("ByteArraySize", iconByteArraySize);
-        for(int i = 0; i < iconByteArraySize; i++) {
-            sendIntent.putExtra("icon"+Integer.toString(i), iconByteArrayList.get(i));
+        sendIntent.putExtra("FaceSize", faces.size());
+        for(int i = 0; i < faces.size(); i++) {
+            sendIntent.putExtra("FaceLandmarks"+Integer.toString(i), faces.get(i).getStrLandmark());//사진 속 얼굴 랜드마크 전송
+            sendIntent.putExtra("FaceIcon"+Integer.toString(i), convertBitmapToByteArray(faces.get(i).getIcon())); //사진 속 얼굴 아이콘 전송
         }
+
+        sendIntent.putExtra("AddrBookSize", addressBooks.size());
+        for(int i = 0; i < addressBooks.size(); i++) {
+            sendIntent.putExtra("AddrBookID"+Integer.toString(i), Integer.toString(addressBooks.get(i).getId()));
+            sendIntent.putExtra("AddrBookName"+Integer.toString(i), addressBooks.get(i).getName());
+            sendIntent.putExtra("AddrBookPhoneNumber"+Integer.toString(i), addressBooks.get(i).getPhoneNumber());
+            sendIntent.putExtra("AddrBookLandmark"+Integer.toString(i), addressBooks.get(i).getFace().getStrLandmark());
+            sendIntent.putExtra("AddrBookIcon"+Integer.toString(i), convertBitmapToByteArray(addressBooks.get(i).getFace().getIcon())); //사진 속 얼굴 아이콘 전송
+        }
+
+        sendIntent.putExtra("Image", convertBitmapToByteArray(bm)); //사용자가 선택한 사진 전송
         startActivity(sendIntent);
         finish();
     }
@@ -386,20 +452,22 @@ public class MainActivity extends AppCompatActivity {
             if(y < 0) y = 0;
             if(exWidth > bm.getWidth()) exWidth = bm.getWidth();
             if(exHeight > bm.getHeight()) exHeight = bm.getHeight();
+
             icon = Bitmap.createBitmap(bm, x, y, exWidth, exHeight);
             icon = getResizedBitmap(icon, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT); //icon으로 재생성
 
             //비트맵인 icon을 byyeArray로 변환후 저장
+            /*
             ByteArrayOutputStream bStream = new ByteArrayOutputStream();
             icon.compress(Bitmap.CompressFormat.PNG, 100, bStream);
             byte[] byteArray = bStream.toByteArray();
             iconByteArrayList.add(byteArray);
+            */
 
             //canvas.drawRect(bounds, paint); //얼굴 사각형 그리기
             // Get landmark
             ArrayList<Point> landmarks = ret.getFaceLandmarks();
             String tempLandmark = "";
-            int index = 0;
             for (Point point : landmarks) {
                 int pointX = (int) (point.x * resizeRatio);
                 int pointY = (int) (point.y * resizeRatio);
@@ -409,7 +477,10 @@ public class MainActivity extends AppCompatActivity {
                 tempLandmark += ",";
                 //canvas.drawCircle(pointX, pointY, 2, paint); //랜드마크 그리기
             }
-            totalLandmarks.add(tempLandmark);
+            Face face = new Face();
+            face.setIcon(icon);
+            face.setStrLandmark(tempLandmark);
+            faces.add(face);
         }
         return new BitmapDrawable(getResources(), bm);
     }

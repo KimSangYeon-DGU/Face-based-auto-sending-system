@@ -27,9 +27,13 @@ public class SendActivity extends AppCompatActivity {
     private Face[] face;
     private LandmarkComparator comparator = new LandmarkComparator();
     private ArrayList<AddressBook> candidate = new ArrayList<AddressBook>();
-    private ArrayList<String> totalLandmarks;
+    private ArrayList<AddressBook> addressBooks = new ArrayList<>();
+    private ArrayList<Face> faces = new ArrayList<>();
+    /*
+    private ArrayList<String> faceLandmarks;
     private ArrayList<String> addrBookLandmarks;
     private ArrayList<Bitmap> iconBitmaps = new ArrayList<Bitmap>();
+    */
     private Bitmap bmp;
 
     private ListView listview ;
@@ -85,17 +89,31 @@ public class SendActivity extends AppCompatActivity {
         });
     }
     public void getDataFromMainActivity(){
-        totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-        byte[] byteArray = getIntent().getByteArrayExtra("image");
-        int byteArraySize = getIntent().getIntExtra("ByteArraySize", 1);
-        Bitmap temp;
-        for(int i = 0; i < byteArraySize; i++) {
-            byte[] tempByteArray = getIntent().getByteArrayExtra("icon" + Integer.toString(i));
-            temp = BitmapFactory.decodeByteArray(tempByteArray, 0, tempByteArray.length);
-            iconBitmaps.add(temp);
+        //totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
+        //addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
+        int faceSize = getIntent().getIntExtra("FaceSize", 1);
+        for(int i = 0; i < faceSize; i++){ //사진 속 얼굴에 대한 정보 수신
+            String tempStrLandmark = getIntent().getStringExtra("FaceLandmarks"+Integer.toString(i));
+            byte[] tempByteArray = getIntent().getByteArrayExtra("FaceIcon"+Integer.toString(i));
+            Bitmap icon  = BitmapFactory.decodeByteArray(tempByteArray, 0, tempByteArray.length);//선택 사진 비트맵으로 변환 후 bmp에 저장
+            Face face = new Face();
+            face.setStrLandmark(tempStrLandmark);
+            face.setIcon(icon);
+            faces.add(face);
         }
-        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+        int addrBookSize = getIntent().getIntExtra("AddrBookSize", 1);
+        for(int i = 0; i < addrBookSize; i++){
+            int tempAddrBookId = getIntent().getIntExtra("AddrBookID",1);
+            String tempAddrBookName = getIntent().getStringExtra("AddrBookName"+Integer.toString(i));
+            String tempAddrBookPhoneNumber = getIntent().getStringExtra("AddrBookPhoneNumber"+Integer.toString(i));
+            String tempAddrBookLandmark = getIntent().getStringExtra("AddrBookLandmark"+Integer.toString(i));
+            byte[] tempAddrBookByteArray = getIntent().getByteArrayExtra("AddrBookIcon"+Integer.toString(i));
+            Bitmap icon  = BitmapFactory.decodeByteArray(tempAddrBookByteArray, 0, tempAddrBookByteArray.length);//주소록 비트맵으로 변환 후 bmp에 저장
+            AddressBook addressBook = new AddressBook(tempAddrBookId, tempAddrBookName, tempAddrBookPhoneNumber,icon,tempAddrBookLandmark);
+            addressBooks.add(addressBook);
+        }
+        byte[] byteArray = getIntent().getByteArrayExtra("Image"); //사용자 선택 사진 수신
+        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);//선택 사진 비트맵으로 변환 후 bmp에 저장
     }
     public void showListView(){
         // Adapter 생성
@@ -107,13 +125,17 @@ public class SendActivity extends AppCompatActivity {
         int mCandidateSize = candidate.size();
         for(int i = 0; i < mCandidateSize; i++) {
             // 첫 번째 아이템 추가.
-            Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
-            adapter.addItem(icon, candidate.get(i).getName(), candidate.get(i).getPhoneNumber(), candidate.get(i).getIcon(), candidate.get(i).getSimilarity()+"%");
+            //Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
+            Bitmap icon = candidate.get(i).getFace().getIcon(); //주소록 아이콘
+            String name = candidate.get(i).getName();
+            String phoneNumber = candidate.get(i).getPhoneNumber();
+            String similarity = candidate.get(i).getSimilarity();
+            Bitmap predictedIcon = candidate.get(i).getPredictedIcon();
+            adapter.addItem(icon, name, phoneNumber, predictedIcon, similarity+"%");
         }
     }
 
     public void startSearchPeople(){
-
         String[] name = new String[3];
         String[] phoneNumber = new String[3];
         Bitmap[] images = new Bitmap[3];
@@ -161,7 +183,7 @@ public class SendActivity extends AppCompatActivity {
             }
             if(personB != -1) {
                 int probability = (int)results;
-                addressBook[personB].setIcon(iconBitmaps.get(personA));
+                addressBook[personB].setPredictedIcon();
                 addressBook[personB].setSimilarity(Integer.toString(probability));
                 candidate.add(addressBook[personB]);
             }

@@ -1,49 +1,43 @@
 package com.cse.dlibtest;
 
 import android.graphics.Bitmap;
+import android.net.Uri;
 
 /**
  * Created by sy081 on 2018-01-12.
  */
 
 public class AddressBook {
-    private int number;
+    private int id;
     private String name;
     private String phoneNumber;
-    private Bitmap image;
-    private Bitmap icon;
     private String similarity;
+    private Face face;
+    private Bitmap predictedIcon;
 
-    public AddressBook(int _number, String _name, String _phoneNumber, Bitmap _image){
-        this.number = _number;
+    public AddressBook(int _id, String _name, String _phoneNumber, Bitmap _icon, String Landmark){
+        this.id = _id;
         this.name = _name;
         this.phoneNumber = _phoneNumber;
-        this.image = _image;
+        this.face.setIcon(_icon);
+        this.face.setStrLandmark(Landmark);
     }
-    public void setIcon(Bitmap icon) {
-        this.icon = icon;
+
+    public void setPredictedIcon(Bitmap predictedIcon) {
+        this.predictedIcon = predictedIcon;
+    }
+
+    public void setFace(Face face) {
+        this.face = face;
     }
 
     public void setSimilarity(String similarity) {
         this.similarity = similarity;
     }
 
-    public int getNumber() {
-        return this.number;
+    public void setId(int _id) {
+        this.id = _id;
     }
-
-    public void setNumber(int _number) {
-        this.number = _number;
-    }
-
-    public Bitmap getImage() {
-        return this.image;
-    }
-
-    public void setImage(Bitmap _image) {
-        this.image = _image;
-    }
-
 
 
     public void setName(String name) {
@@ -54,12 +48,20 @@ public class AddressBook {
         this.phoneNumber = phoneNumber;
     }
 
-    public String getSimilarity() {
-        return similarity;
+    public int getId() {
+        return this.id;
     }
 
-    public Bitmap getIcon() {
-        return icon;
+    public Face getFace() {
+        return face;
+    }
+
+    public Bitmap getPredictedIcon() {
+        return predictedIcon;
+    }
+
+    public String getSimilarity() {
+        return similarity;
     }
 
     public String getName() {

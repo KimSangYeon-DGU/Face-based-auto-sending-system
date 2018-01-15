@@ -26,6 +26,10 @@ public class Face{
     private double[] glabellaRatio = new double[GLABELLA_RATIO_SIZE];
     private double[] faceAreaRatio = new double[FACE_AREA_RATIO_SIZE];
     private boolean ratioReady;
+    private String strLandmark;
+    private Bitmap image;
+    private Bitmap icon;
+
     public Face(){
         for(int i = 0; i < 68; i++){
             landmarks[i] = new Point();
@@ -35,6 +39,18 @@ public class Face{
         noseAndChinDist[0] = 0;
         noseAndChinDist[1] = 0;
         this.ratioReady = false;
+    }
+
+    public void setIcon(Bitmap icon) {
+        this.icon = icon;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
+    public void setStrLandmark(String strLandmark) {
+        this.strLandmark = strLandmark;
     }
 
     //얼굴 비율 세팅
@@ -103,6 +119,18 @@ public class Face{
     public void setFaceLandmarks(int index, Point point){
         this.landmarks[index].x = point.x;
         this.landmarks[index].y = point.y;
+    }
+
+    public String getStrLandmark() {
+        return this.strLandmark;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public Bitmap getIcon() {
+        return icon;
     }
 
     //비율 구하기
