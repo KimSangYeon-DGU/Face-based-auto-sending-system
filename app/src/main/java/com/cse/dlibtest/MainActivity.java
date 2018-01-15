@@ -69,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
     final private int ICON_IMAGE_HEIGHT = 128;
     private Bitmap bm;
     private static final String TAG = "MainActivity";
-    //private ArrayList<String> totalLandmarks = new ArrayList<String>(); //사진 전체 랜드마크
     private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
     private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
@@ -110,7 +109,29 @@ public class MainActivity extends AppCompatActivity {
         // Just use hugo to print log
         isExternalStorageWritable();
         isExternalStorageReadable();
+        init();
+        Bitmap insertImage = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
+        insertUser("김상연", "01079405173", insertImage);
+        if(!deleteUser(1)){
+            Log.d("ERROR", "연락처를 지울 수 없습니다.");
+        }
+    }
+    public void insertUser(String name, String phoneNumber, Bitmap image){
+        int size = addressBooks.size();
+        Bitmap icon = getResizedBitmap(image, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT);
+        addressBooks.add(new AddressBook(size+1, name, phoneNumber, icon));
+    }
+    public boolean deleteUser(int id){
+        try{
+            addressBooks.remove(id);
+        }catch(Exception e){
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
 
+    public void init(){
         // For API 23+ you need to request the read/write permissions even if they are already in your manifest.
         int currentapiVersion = android.os.Build.VERSION.SDK_INT;
 
@@ -156,20 +177,17 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
             }
-
             @Override
             public void onPermissionDenied(ArrayList<String> deniedPermissions) {
                 Toast.makeText(MainActivity.this, "Permission Denied\n" + deniedPermissions.toString(), Toast.LENGTH_SHORT).show();
 
             }
         };
-
         new TedPermission(this)
                 .setPermissionListener(permissionlistener)
                 .setDeniedMessage("If you reject permission,you can not use this service\n\nPlease turn on permissions at [Setting] > [Permission]")
                 .setPermissions(Manifest.permission.READ_CONTACTS, Manifest.permission.READ_SMS,Manifest.permission.SEND_SMS,Manifest.permission.READ_PHONE_STATE)
                 .check();
-
     }
 
     //주소록 랜드마크 추출
@@ -192,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
         return tempTestLandmarks;
     }
 
-
     @AfterViews
     protected void setupUI() {
         mToolbar.setTitle(getString(R.string.app_name));
@@ -208,11 +225,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Click({R.id.fab_process}) //process button
     protected void searchPeople() {
-        /*
-        ByteArrayOutputStream bStream = new ByteArrayOutputStream();
-        bm.compress(Bitmap.CompressFormat.PNG, 100, bStream);
-        byte[] byteArray = bStream.toByteArray();
-        */
         Intent sendIntent = new Intent(MainActivity.this, SendActivity.class);
         sendIntent.putExtra("FaceSize", faces.size());
         for(int i = 0; i < faces.size(); i++) {

@@ -12,9 +12,16 @@ public class AddressBook {
     private String name;
     private String phoneNumber;
     private String similarity;
-    private Face face;
+    private Face face = new Face();
     private Bitmap predictedIcon;
 
+    public AddressBook(){}
+    public AddressBook(int _id, String _name, String _phoneNumber, Bitmap _icon){
+        this.id = _id;
+        this.name = _name;
+        this.phoneNumber = _phoneNumber;
+        this.face.setIcon(_icon);
+    }
     public AddressBook(int _id, String _name, String _phoneNumber, Bitmap _icon, String Landmark){
         this.id = _id;
         this.name = _name;
@@ -22,6 +29,7 @@ public class AddressBook {
         this.face.setIcon(_icon);
         this.face.setStrLandmark(Landmark);
     }
+
 
     public void setPredictedIcon(Bitmap predictedIcon) {
         this.predictedIcon = predictedIcon;

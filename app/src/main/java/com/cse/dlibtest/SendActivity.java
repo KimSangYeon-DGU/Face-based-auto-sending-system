@@ -24,9 +24,8 @@ public class SendActivity extends AppCompatActivity {
     final private int LANDMARK_SIZE = 68;
     final private int ICON_IMAGE_WIDTH = 128;
     final private int ICON_IMAGE_HEIGHT = 128;
-    private Face[] face;
     private LandmarkComparator comparator = new LandmarkComparator();
-    private ArrayList<AddressBook> candidate = new ArrayList<AddressBook>();
+    private ArrayList<Prediction> candidate = new ArrayList<>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
     private ArrayList<Face> faces = new ArrayList<>();
     /*
@@ -125,8 +124,7 @@ public class SendActivity extends AppCompatActivity {
         int mCandidateSize = candidate.size();
         for(int i = 0; i < mCandidateSize; i++) {
             // 첫 번째 아이템 추가.
-            //Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
-            Bitmap icon = candidate.get(i).getFace().getIcon(); //주소록 아이콘
+            Bitmap icon = candidate.get(i).getIcon(); //주소록 아이콘
             String name = candidate.get(i).getName();
             String phoneNumber = candidate.get(i).getPhoneNumber();
             String similarity = candidate.get(i).getSimilarity();
@@ -136,58 +134,45 @@ public class SendActivity extends AppCompatActivity {
     }
 
     public void startSearchPeople(){
-        String[] name = new String[3];
-        String[] phoneNumber = new String[3];
-        Bitmap[] images = new Bitmap[3];
-        int totalSize = totalLandmarks.size();
-        int addrBookSize = addrBookLandmarks.size();
+        int faceSize = faces.size();
+        int addrBookSize = addressBooks.size();
 
-        setAddressInfo(name, phoneNumber, images); //가상 주소록 정보 저장
-        face = new Face[totalSize];
-        for(int i = 0; i < totalSize; i++){
-            face[i] = new Face();
+        for(int i = 0; i < faceSize; i++) { //현재 사진 속 인물의 랜드마크 저장
+            saveUserLandmark(faces.get(i), faces.get(i).getStrLandmark());
         }
-        //주소록
-        AddressBook[] addressBook = new AddressBook[addrBookSize];
-        for(int i = 0; i< addrBookSize; i++){
-            addressBook[i] = new AddressBook(i, name[i], phoneNumber[i], images[i]);
+        for(int i = 0; i < addrBookSize; i++) { //주소록에 있는 랜드마크 저장
+            saveUserLandmark(addressBooks.get(i).getFace(), addressBooks.get(i).getFace().getStrLandmark());
         }
 
-        //주소록 사진의 랜드마크를 저장할 객체 생성
-        Face[] addrBookFace = new Face[addrBookSize];
-        for(int i = 0; i < addrBookSize; i++){
-            addrBookFace[i] = new Face();
-        }
-
-        saveUserLandmark(face, totalLandmarks, totalSize); //현재 사진 속 인물의 랜드마크 저장
-        saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
-        for(int i = 0; i < totalSize; i++){
-            face[i].setFaceRatio();
+        for(int i = 0; i < faceSize; i++){
+            faces.get(i).setFaceRatio();
         }
         for(int i = 0; i < addrBookSize; i++){
-            addrBookFace[i].setFaceRatio();
+            addressBooks.get(i).getFace().setFaceRatio();
         }
+
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
-        double temp = 0, results = 0;
-        int personA, personB;
-        for(int i = 0; i < totalSize; i++){
-            personA = -1;
-            personB = -1;
+        double probability = 0, max = 0;
+        boolean predicted;
+        for(int i = 0; i < faceSize; i++){
+            Prediction prediction = new Prediction();
+            predicted = false;
             for(int j = 0; j < addrBookSize; j++) {
-                temp = comparator.compare(addrBookFace[j], face[i]);
-                if(temp >= results){
-                    results = temp;
-                    personA = i;
-                    personB = j;
+                probability = comparator.compare(addressBooks.get(j).getFace(), faces.get(i));
+                if(probability >= max){
+                    predicted = true;
+                    max = probability;
+                    Bitmap icon = addressBooks.get(j).getFace().getIcon();
+                    String name = addressBooks.get(j).getName();
+                    String phoneNumber = addressBooks.get(j).getPhoneNumber();
+                    Bitmap predictedIcon = faces.get(i).getIcon();
+                    String similarity = Integer.toString((int)max);
+                    prediction = new Prediction(icon, name, phoneNumber, predictedIcon, similarity);
                 }
             }
-            if(personB != -1) {
-                int probability = (int)results;
-                addressBook[personB].setPredictedIcon();
-                addressBook[personB].setSimilarity(Integer.toString(probability));
-                candidate.add(addressBook[personB]);
+            if(predicted) {
+                candidate.add(prediction);
             }
-            System.out.println(personA + "와 " + addressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }
     }
     //MMS 전송
@@ -203,26 +188,13 @@ public class SendActivity extends AppCompatActivity {
         messageIntent.setAction(Intent.ACTION_SEND);
         startActivity(messageIntent);
     }
-    //가상 주소록 정보 저장
-    public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
-        name[0] = "김상연";
-        name[1] = "나선엽";
-        name[2] = "강백진";
-        phoneNumber[0] = "010-7940-5173";
-        phoneNumber[1] = "010-3333-3323";
-        phoneNumber[2] = "010-5555-3212";
-        images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
-        images[1] = BitmapFactory.decodeResource(getResources(), R.drawable.na);
-        images[2] = BitmapFactory.decodeResource(getResources(), R.drawable.kang);
-    }
+
     //Face객체에 랜드마크 정보 저장
-    protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){
-        Point[] point = new Point[68];
-        for(int i = 0; i < size; i++) {
-            point = convertStringToPoint(totalLandmarks.get(i));
-            for(int j = 0; j < LANDMARK_SIZE; j++){
-                face[i].setFaceLandmarks(j, point[j]);
-            }
+    protected void saveUserLandmark(Face _faces, String _faceLandmarks){
+        Point[] point;
+        point = convertStringToPoint(_faces.getStrLandmark());
+        for(int j = 0; j < LANDMARK_SIZE; j++){
+            _faces.setFaceLandmarks(j, point[j]);
         }
     }
 

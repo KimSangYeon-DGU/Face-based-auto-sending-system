@@ -29,6 +29,7 @@ public class Face{
     private String strLandmark;
     private Bitmap image;
     private Bitmap icon;
+    private int predictedId;
 
     public Face(){
         for(int i = 0; i < 68; i++){
@@ -39,6 +40,10 @@ public class Face{
         noseAndChinDist[0] = 0;
         noseAndChinDist[1] = 0;
         this.ratioReady = false;
+    }
+
+    public void setPredictedId(int predictedId) {
+        this.predictedId = predictedId;
     }
 
     public void setIcon(Bitmap icon) {
@@ -96,6 +101,10 @@ public class Face{
     //거리 구하기
     public double getDistance(Point point1, Point point2){
         return Math.sqrt(Math.pow((point2.x - point1.x),2) + Math.pow((point2.y - point1.y),2));
+    }
+
+    public int getPredictedId() {
+        return predictedId;
     }
 
     public double[] getNoseAndChinRatio(){
