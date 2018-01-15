@@ -14,10 +14,12 @@
  *
  */
 
-package com.cse.dlibtest;
+package com.cse.dlibtest.util;
 
 import android.app.Application;
 import android.util.Log;
+
+import com.cse.dlibtest.BuildConfig;
 
 import timber.log.Timber;
 

@@ -1,10 +1,7 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.model;
 
 import android.graphics.Bitmap;
 import android.graphics.Point;
-
-import java.io.ByteArrayOutputStream;
-import java.io.Serializable;
 
 /**
  * Created by sy081 on 2018-01-04.
@@ -26,6 +23,11 @@ public class Face{
     private double[] glabellaRatio = new double[GLABELLA_RATIO_SIZE];
     private double[] faceAreaRatio = new double[FACE_AREA_RATIO_SIZE];
     private boolean ratioReady;
+    private String strLandmark;
+    private Bitmap image;
+    private Bitmap icon;
+    private int predictedId;
+
     public Face(){
         for(int i = 0; i < 68; i++){
             landmarks[i] = new Point();
@@ -35,6 +37,22 @@ public class Face{
         noseAndChinDist[0] = 0;
         noseAndChinDist[1] = 0;
         this.ratioReady = false;
+    }
+
+    public void setPredictedId(int predictedId) {
+        this.predictedId = predictedId;
+    }
+
+    public void setIcon(Bitmap icon) {
+        this.icon = icon;
+    }
+
+    public void setImage(Bitmap image) {
+        this.image = image;
+    }
+
+    public void setStrLandmark(String strLandmark) {
+        this.strLandmark = strLandmark;
     }
 
     //얼굴 비율 세팅
@@ -82,6 +100,10 @@ public class Face{
         return Math.sqrt(Math.pow((point2.x - point1.x),2) + Math.pow((point2.y - point1.y),2));
     }
 
+    public int getPredictedId() {
+        return predictedId;
+    }
+
     public double[] getNoseAndChinRatio(){
         return this.noseAndChinRatio;
     }
@@ -103,6 +125,18 @@ public class Face{
     public void setFaceLandmarks(int index, Point point){
         this.landmarks[index].x = point.x;
         this.landmarks[index].y = point.y;
+    }
+
+    public String getStrLandmark() {
+        return this.strLandmark;
+    }
+
+    public Bitmap getImage() {
+        return image;
+    }
+
+    public Bitmap getIcon() {
+        return icon;
     }
 
     //비율 구하기

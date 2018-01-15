@@ -1,4 +1,4 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.adapter;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -10,6 +10,9 @@ import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import com.cse.dlibtest.R;
+import com.cse.dlibtest.model.ListViewItem;
 
 import java.util.ArrayList;
 

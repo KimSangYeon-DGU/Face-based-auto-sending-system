@@ -1,10 +1,12 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.util;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.CheckBox;
 import android.widget.Checkable;
 import android.widget.LinearLayout;
+
+import com.cse.dlibtest.R;
 
 /**
  * Created by sy081 on 2018-01-13.

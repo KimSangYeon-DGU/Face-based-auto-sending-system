@@ -1,4 +1,4 @@
-package com.cse.dlibtest;
+package com.cse.dlibtest.ui;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -14,7 +14,19 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 
+import com.cse.dlibtest.MainActivity;
+import com.cse.dlibtest.MainActivity_;
+import com.cse.dlibtest.model.AddressBook;
+import com.cse.dlibtest.model.Face;
+import com.cse.dlibtest.util.LandmarkComparator;
+import com.cse.dlibtest.adapter.ListViewAdapter;
+import com.cse.dlibtest.model.ListViewItem;
+import com.cse.dlibtest.model.Prediction;
+import com.cse.dlibtest.R;
+
 import java.util.ArrayList;
+
+import static com.cse.dlibtest.util.Util.getResizedBitmap;
 
 /**
  * Created by sy081 on 2018-01-03.
@@ -24,12 +36,10 @@ public class SendActivity extends AppCompatActivity {
     final private int LANDMARK_SIZE = 68;
     final private int ICON_IMAGE_WIDTH = 128;
     final private int ICON_IMAGE_HEIGHT = 128;
-    private Face[] face;
     private LandmarkComparator comparator = new LandmarkComparator();
-    private ArrayList<AddressBook> candidate = new ArrayList<AddressBook>();
-    private ArrayList<String> totalLandmarks;
-    private ArrayList<String> addrBookLandmarks;
-    private ArrayList<Bitmap> iconBitmaps = new ArrayList<Bitmap>();
+    private ArrayList<Prediction> candidate = new ArrayList<>();
+    private ArrayList<AddressBook> addressBooks = new ArrayList<>();
+    private ArrayList<Face> faces = new ArrayList<>();
     private Bitmap bmp;
 
     private ListView listview ;
@@ -54,6 +64,7 @@ public class SendActivity extends AppCompatActivity {
                 moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP); //액티비티간 이동중에 스택 중간에 저장되어있는 액티비티를 지움
                 moveToMainIntent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP); //띄우려는 액티비티가 스택 맨위에 이미 실행 중이면 재사용함.
                 startActivity(moveToMainIntent); //Activity 시작
+                finish();
             }
         });
 
@@ -67,7 +78,7 @@ public class SendActivity extends AppCompatActivity {
                 boolean isThere = false;
                 String phoneNumber = "";
                 for(int i =  0; i < count; i++){
-                    ListViewItem lv = new ListViewItem();
+                    ListViewItem lv;
                     if(checkedItems.get(i)) {
                         lv = (ListViewItem) adapter.getItem(i);
                         if (!isThere) {
@@ -85,17 +96,32 @@ public class SendActivity extends AppCompatActivity {
         });
     }
     public void getDataFromMainActivity(){
-        totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
-        addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
-        byte[] byteArray = getIntent().getByteArrayExtra("image");
-        int byteArraySize = getIntent().getIntExtra("ByteArraySize", 1);
-        Bitmap temp;
-        for(int i = 0; i < byteArraySize; i++) {
-            byte[] tempByteArray = getIntent().getByteArrayExtra("icon" + Integer.toString(i));
-            temp = BitmapFactory.decodeByteArray(tempByteArray, 0, tempByteArray.length);
-            iconBitmaps.add(temp);
+        //totalLandmarks = getIntent().getExtras().getStringArrayList("TotalLandmarks");
+        //addrBookLandmarks = getIntent().getExtras().getStringArrayList("AddrBookLandmarks");
+        int faceSize = getIntent().getIntExtra("FaceSize", 1);
+        for(int i = 0; i < faceSize; i++){ //사진 속 얼굴에 대한 정보 수신
+            String tempStrLandmark = getIntent().getStringExtra("FaceLandmarks"+Integer.toString(i));
+            byte[] tempByteArray = getIntent().getByteArrayExtra("FaceIcon"+Integer.toString(i));
+            Bitmap icon  = BitmapFactory.decodeByteArray(tempByteArray, 0, tempByteArray.length);//선택 사진 비트맵으로 변환 후 bmp에 저장
+            Face face = new Face();
+            face.setStrLandmark(tempStrLandmark);
+            face.setIcon(icon);
+            faces.add(face);
         }
-        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);
+        int addrBookSize = getIntent().getIntExtra("AddrBookSize", 1);
+        for(int i = 0; i < addrBookSize; i++){
+            int tempAddrBookId = getIntent().getIntExtra("AddrBookID",1);
+            String tempAddrBookName = getIntent().getStringExtra("AddrBookName"+Integer.toString(i));
+            String tempAddrBookPhoneNumber = getIntent().getStringExtra("AddrBookPhoneNumber"+Integer.toString(i));
+            String tempAddrBookLandmark = getIntent().getStringExtra("AddrBookLandmark"+Integer.toString(i));
+            byte[] tempAddrBookByteArray = getIntent().getByteArrayExtra("AddrBookImage"+Integer.toString(i));
+            Bitmap image  = BitmapFactory.decodeByteArray(tempAddrBookByteArray, 0, tempAddrBookByteArray.length);//주소록 비트맵으로 변환 후 bmp에 저장
+            Bitmap icon = getResizedBitmap(image, ICON_IMAGE_WIDTH, ICON_IMAGE_WIDTH);
+            AddressBook addressBook = new AddressBook(tempAddrBookId, tempAddrBookName, tempAddrBookPhoneNumber, image, icon,tempAddrBookLandmark);
+            addressBooks.add(addressBook);
+        }
+        byte[] byteArray = getIntent().getByteArrayExtra("Image"); //사용자 선택 사진 수신
+        bmp = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.length);//선택 사진 비트맵으로 변환 후 bmp에 저장
     }
     public void showListView(){
         // Adapter 생성
@@ -107,65 +133,55 @@ public class SendActivity extends AppCompatActivity {
         int mCandidateSize = candidate.size();
         for(int i = 0; i < mCandidateSize; i++) {
             // 첫 번째 아이템 추가.
-            Bitmap icon = Bitmap.createScaledBitmap(candidate.get(i).getImage(), ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT, true);
-            adapter.addItem(icon, candidate.get(i).getName(), candidate.get(i).getPhoneNumber(), candidate.get(i).getIcon(), candidate.get(i).getSimilarity()+"%");
+            Bitmap icon = candidate.get(i).getIcon(); //주소록 아이콘
+            String name = candidate.get(i).getName();
+            String phoneNumber = candidate.get(i).getPhoneNumber();
+            String similarity = candidate.get(i).getSimilarity();
+            Bitmap predictedIcon = candidate.get(i).getPredictedIcon();
+            adapter.addItem(icon, name, phoneNumber, predictedIcon, similarity+"%");
         }
     }
 
     public void startSearchPeople(){
+        int faceSize = faces.size();
+        int addrBookSize = addressBooks.size();
 
-        String[] name = new String[3];
-        String[] phoneNumber = new String[3];
-        Bitmap[] images = new Bitmap[3];
-        int totalSize = totalLandmarks.size();
-        int addrBookSize = addrBookLandmarks.size();
-
-        setAddressInfo(name, phoneNumber, images); //가상 주소록 정보 저장
-        face = new Face[totalSize];
-        for(int i = 0; i < totalSize; i++){
-            face[i] = new Face();
+        for(int i = 0; i < faceSize; i++) { //현재 사진 속 인물의 랜드마크 저장
+            saveUserLandmark(faces.get(i), faces.get(i).getStrLandmark());
         }
-        //주소록
-        AddressBook[] addressBook = new AddressBook[addrBookSize];
-        for(int i = 0; i< addrBookSize; i++){
-            addressBook[i] = new AddressBook(i, name[i], phoneNumber[i], images[i]);
+        for(int i = 0; i < addrBookSize; i++) { //주소록에 있는 랜드마크 저장
+            saveUserLandmark(addressBooks.get(i).getFace(), addressBooks.get(i).getFace().getStrLandmark());
         }
 
-        //주소록 사진의 랜드마크를 저장할 객체 생성
-        Face[] addrBookFace = new Face[addrBookSize];
-        for(int i = 0; i < addrBookSize; i++){
-            addrBookFace[i] = new Face();
-        }
-
-        saveUserLandmark(face, totalLandmarks, totalSize); //현재 사진 속 인물의 랜드마크 저장
-        saveUserLandmark(addrBookFace, addrBookLandmarks, addrBookSize); //주소록에 있는 랜드마크 저장
-        for(int i = 0; i < totalSize; i++){
-            face[i].setFaceRatio();
+        for(int i = 0; i < faceSize; i++){
+            faces.get(i).setFaceRatio();
         }
         for(int i = 0; i < addrBookSize; i++){
-            addrBookFace[i].setFaceRatio();
+            addressBooks.get(i).getFace().setFaceRatio();
         }
+
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
-        double temp = 0, results = 0;
-        int personA, personB;
-        for(int i = 0; i < totalSize; i++){
-            personA = -1;
-            personB = -1;
+        double probability = 0, max = 0;
+        boolean predicted;
+        for(int i = 0; i < faceSize; i++){
+            Prediction prediction = new Prediction();
+            predicted = false;
             for(int j = 0; j < addrBookSize; j++) {
-                temp = comparator.compare(addrBookFace[j], face[i]);
-                if(temp >= results){
-                    results = temp;
-                    personA = i;
-                    personB = j;
+                probability = comparator.compare(addressBooks.get(j).getFace(), faces.get(i));
+                if(probability >= max){
+                    predicted = true;
+                    max = probability;
+                    Bitmap icon = addressBooks.get(j).getFace().getIcon();
+                    String name = addressBooks.get(j).getName();
+                    String phoneNumber = addressBooks.get(j).getPhoneNumber();
+                    Bitmap predictedIcon = faces.get(i).getIcon();
+                    String similarity = Integer.toString((int)max);
+                    prediction = new Prediction(icon, name, phoneNumber, predictedIcon, similarity);
                 }
             }
-            if(personB != -1) {
-                int probability = (int)results;
-                addressBook[personB].setIcon(iconBitmaps.get(personA));
-                addressBook[personB].setSimilarity(Integer.toString(probability));
-                candidate.add(addressBook[personB]);
+            if(predicted) {
+                candidate.add(prediction);
             }
-            System.out.println(personA + "와 " + addressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }
     }
     //MMS 전송
@@ -181,26 +197,13 @@ public class SendActivity extends AppCompatActivity {
         messageIntent.setAction(Intent.ACTION_SEND);
         startActivity(messageIntent);
     }
-    //가상 주소록 정보 저장
-    public void setAddressInfo(String[] name, String[] phoneNumber, Bitmap[] images){
-        name[0] = "김상연";
-        name[1] = "나선엽";
-        name[2] = "강백진";
-        phoneNumber[0] = "010-7940-5173";
-        phoneNumber[1] = "010-3333-3323";
-        phoneNumber[2] = "010-5555-3212";
-        images[0] = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
-        images[1] = BitmapFactory.decodeResource(getResources(), R.drawable.na);
-        images[2] = BitmapFactory.decodeResource(getResources(), R.drawable.kang);
-    }
+
     //Face객체에 랜드마크 정보 저장
-    protected void saveUserLandmark(Face[] face, ArrayList<String> totalLandmarks, int size){
-        Point[] point = new Point[68];
-        for(int i = 0; i < size; i++) {
-            point = convertStringToPoint(totalLandmarks.get(i));
-            for(int j = 0; j < LANDMARK_SIZE; j++){
-                face[i].setFaceLandmarks(j, point[j]);
-            }
+    protected void saveUserLandmark(Face _faces, String _faceLandmarks){
+        Point[] point;
+        point = convertStringToPoint(_faces.getStrLandmark());
+        for(int j = 0; j < LANDMARK_SIZE; j++){
+            _faces.setFaceLandmarks(j, point[j]);
         }
     }
 
