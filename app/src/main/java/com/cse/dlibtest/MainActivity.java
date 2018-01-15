@@ -31,6 +31,8 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.widget.Toast;
@@ -73,6 +75,9 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
     private ArrayList<Face> faces = new ArrayList<>();
+
+
+    private ContactsAdapter mAdapter;
     // Storage Permissions
     private static String[] PERMISSIONS_REQ = {
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -82,14 +87,15 @@ public class MainActivity extends AppCompatActivity {
 
     protected String mTestImgPath;
     // UI
+    @ViewById(R.id.rv_contacts)
+    protected RecyclerView mAddressView;
     @ViewById(R.id.material_listview)
     protected MaterialListView mListView;
     @ViewById(R.id.fab)
     protected FloatingActionButton mFabActionBt;
     @ViewById(R.id.fab_process)
     protected FloatingActionButton mFabProcessActionBt;
-    @ViewById(R.id.toolbar)
-    protected Toolbar mToolbar;
+
     FaceDet mFaceDet;
 
     //CONTACTS DATA SET
@@ -104,12 +110,18 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mListView = (MaterialListView) findViewById(R.id.material_listview);
-        setSupportActionBar(mToolbar);
         // Just use hugo to print log
         isExternalStorageWritable();
         isExternalStorageReadable();
+          mListView = (MaterialListView) findViewById(R.id.material_listview);
+        //LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+       // mAddressView = (RecyclerView)findViewById(R.id.rv_contacts);
+        //mAddressView.setLayoutManager(linearLayoutManager);
+        mAdapter = new ContactsAdapter(this, addressBooks);
         init();
+
+
+
         Bitmap insertImage = BitmapFactory.decodeResource(getResources(), R.drawable.kim);
         insertUser("김상연", "01079405173", insertImage);
         if(!deleteUser(1)){
@@ -174,6 +186,7 @@ public class MainActivity extends AppCompatActivity {
                         String tempLandmark = extractAddressBookLandmarks(contactPhoto);
                         AddressBook addressBook = new AddressBook(idx++, name, number, getResizedBitmap(contactPhoto, ICON_IMAGE_WIDTH, ICON_IMAGE_HEIGHT), tempLandmark);
                         addressBooks.add(addressBook);
+                        mAdapter.notifyDataSetChanged();
                     }
                 }
             }
@@ -212,7 +225,6 @@ public class MainActivity extends AppCompatActivity {
 
     @AfterViews
     protected void setupUI() {
-        mToolbar.setTitle(getString(R.string.app_name));
         Toast.makeText(MainActivity.this, getString(R.string.description_info), Toast.LENGTH_LONG).show();
     }
 
