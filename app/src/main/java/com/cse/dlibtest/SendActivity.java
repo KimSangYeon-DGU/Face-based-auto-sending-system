@@ -126,9 +126,9 @@ public class SendActivity extends AppCompatActivity {
             face[i] = new Face();
         }
         //주소록
-        AddressBook[] adressBook = new AddressBook[addrBookSize];
+        AddressBook[] addressBook = new AddressBook[addrBookSize];
         for(int i = 0; i< addrBookSize; i++){
-            adressBook[i] = new AddressBook(i, name[i], phoneNumber[i], images[i]);
+            addressBook[i] = new AddressBook(i, name[i], phoneNumber[i], images[i]);
         }
 
         //주소록 사진의 랜드마크를 저장할 객체 생성
@@ -161,11 +161,11 @@ public class SendActivity extends AppCompatActivity {
             }
             if(personB != -1) {
                 int probability = (int)results;
-                adressBook[personB].setIcon(iconBitmaps.get(personA));
-                adressBook[personB].setSimilarity(Integer.toString(probability));
-                candidate.add(adressBook[personB]);
+                addressBook[personB].setIcon(iconBitmaps.get(personA));
+                addressBook[personB].setSimilarity(Integer.toString(probability));
+                candidate.add(addressBook[personB]);
             }
-            System.out.println(personA + "와 " + adressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
+            System.out.println(personA + "와 " + addressBook[personB].getName() +"님의 닮음도는 "+ results + "입니다.");
         }
     }
     //MMS 전송
