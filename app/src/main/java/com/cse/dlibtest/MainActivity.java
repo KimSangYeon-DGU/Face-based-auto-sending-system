@@ -71,8 +71,6 @@ public class MainActivity extends AppCompatActivity {
     final private int ICON_IMAGE_HEIGHT = 128;
     private Bitmap bm;
     private static final String TAG = "MainActivity";
-    private ArrayList<String> testLandmarks = new ArrayList<String>(); //비교용(테스트) 랜드마크
-    private ArrayList<byte[]> iconByteArrayList = new ArrayList<byte[]>();
     private ArrayList<AddressBook> addressBooks = new ArrayList<>();
     private ArrayList<Face> faces = new ArrayList<>();
 
@@ -308,9 +306,12 @@ public class MainActivity extends AppCompatActivity {
         showExtractDialog();
         int AdrressBookSize = addressBooks.size();
         for(int i = 0; i < AdrressBookSize; i++){
-            String extractedLandmark = extractAddressBookLandmarks(addressBooks.get(i).getFace().getImage());
+            String extractedLandmark = extractAddressBookLandmarks(addressBooks.get(i).getFace().getIcon());
             addressBooks.get(i).getFace().setStrLandmark(extractedLandmark);
         }
+        /*addressBooks.get(0).getFace().setStrLandmark("14,47,15,55,17,63,19,70,23,77,28,83,34,88,40,92,47,93,55,91,61,86,66,80,71,74,74,66,75,58,76,50,76,41,18,40,22,35,27,33,33,33,39,35,49,34,55,32,60,30,66,31,70,36,45,44,45,50,46,57,46,63,39,66,43,67,46,68,50,66,53,65,26,46,29,44,33,44,36,46,33,47,29,47,54,45,57,42,60,42,64,43,61,45,57,45,35,73,39,72,43,72,46,72,49,72,52,72,57,73,52,75,49,77,46,77,43,77,39,75,37,73,43,73,46,74,49,73,55,73,49,74,46,74,43,74,");
+        addressBooks.get(1).getFace().setStrLandmark("11,49,11,57,12,65,13,73,15,81,20,87,26,92,33,96,42,96,50,95,57,92,64,87,69,81,72,74,73,66,74,58,74,50,18,43,21,39,27,37,32,37,38,39,48,39,53,37,59,37,64,39,67,43,43,47,43,53,43,58,43,64,37,68,40,69,43,70,46,69,49,68,24,48,28,46,32,46,35,49,31,49,27,49,51,49,54,46,58,46,61,48,58,49,54,49,31,76,36,75,40,74,43,74,46,74,50,75,54,76,50,78,46,79,43,80,40,80,36,79,32,76,40,76,43,77,46,76,53,76,46,76,43,77,40,76,");
+        addressBooks.get(2).getFace().setStrLandmark("9,43,9,52,10,61,12,69,15,77,20,84,27,90,36,93,45,94,54,92,61,88,67,83,71,76,73,69,74,61,75,52,75,44,18,31,22,27,28,25,34,26,40,28,49,29,54,26,60,26,66,28,69,32,45,36,45,40,45,45,45,50,39,57,42,57,45,58,47,57,50,57,24,38,28,36,32,36,35,38,32,38,28,38,52,38,56,36,60,37,63,38,60,39,56,39,32,70,37,66,42,64,45,65,48,64,52,66,56,69,52,71,48,72,45,72,42,72,37,72,34,69,42,68,45,68,48,68,54,69,48,68,45,69,42,69,");*/
         dismissExtractDialog();
     }
     @UiThread
@@ -358,7 +359,6 @@ public class MainActivity extends AppCompatActivity {
 
             sendIntent.putExtra("Image", convertBitmapToByteArray(bm)); //사용자가 선택한 사진 전송
             startActivity(sendIntent);
-            finish();
             mExtractDialog.dismiss();
         }
     }

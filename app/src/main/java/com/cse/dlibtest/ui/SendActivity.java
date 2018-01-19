@@ -53,7 +53,6 @@ public class SendActivity extends AppCompatActivity {
         getDataFromMainActivity(); //메인 액티비티에서 값 넘겨받기
         startSearchPeople(); //사진속에 사람을 찾음
         showListView(); //찾은 사람들을 리스트 뷰에 뿌려줌
-
         //뒤로 가기 버튼 -> 홈 화면으로 이동
         Button mBackButton = (Button)findViewById(R.id.btn_back);
         Button mSendButton = (Button)findViewById(R.id.btn_send);
