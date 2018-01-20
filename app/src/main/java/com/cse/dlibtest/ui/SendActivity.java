@@ -160,10 +160,12 @@ public class SendActivity extends AppCompatActivity {
         }
 
         //선택한 사진(m)과 주소록 사진(n)의 랜드마크 비교(O(mxn)) 진행
-        double probability = 0, max = 0;
+        double probability, max;
         boolean predicted;
         for(int i = 0; i < faceSize; i++){
             Prediction prediction = new Prediction();
+            probability = 0;
+            max = 0;
             predicted = false;
             for(int j = 0; j < addrBookSize; j++) {
                 probability = comparator.compare(addressBooks.get(j).getFace(), faces.get(i));
